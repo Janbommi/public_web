@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#215849"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'"><title>우리 집 · 함께 쌓는 일상</title><link rel="icon" href="./favicon.svg"><link rel="stylesheet" href="./style.css"><script type="module" src="./app.js"></script></head>
+<body>
+<a class="skip" href="#main">본문으로 건너뛰기</a>
+<aside class="sidebar">
+  <a class="brand" href="#overview"><img src="./favicon.svg" alt="" width="38" height="38"><span>우리 집<small>함께 쌓는 일상</small></span></a>
+  <a class="portal-link" href="../">← 전체 현황판</a><p class="nav-label">우리의 가계</p>
+  <nav aria-label="주 메뉴"><a href="#overview" class="active" data-tab="overview"><span>◫</span> 한눈에 보기</a><a href="#budget" data-tab="budget"><span>▤</span> 월 예산</a><a href="#assets" data-tab="assets"><span>⌂</span> 자산과 부채</a><a href="#connect" data-tab="connect"><span>⇄</span> 카드 연결</a></nav>
+  <div class="sidebar-note"><span class="tiny-dot"></span> 둘이 함께, 조금씩.<p>오늘의 작은 선택이<br>우리의 내일을 만듭니다.</p></div>
+  <div class="household"><div class="avatars"><span>나</span><span>짝</span></div><div>우리 가족<small>공유 화면 · 합계만 표시</small></div></div>
+</aside>
+<main id="main">
+  <div class="demo-banner"><span><b>공개 미리보기</b> 모두 가상 금액입니다. 수정은 이 브라우저에만 저장되며, 부부·기기 간 공유되지 않아요.</span><a href="./account/">우리 집 로그인 ↗</a></div>
+  <header class="page-header"><div><p class="eyebrow" id="eyebrow">OUR HOME, OUR PACE</p><h1 id="page-title">우리 집, 지금은</h1><p class="subtitle" id="subtitle">흩어진 숫자를 모아, 함께 보는 우리 집 살림.</p></div><div class="month-picker"><button id="prev-month" aria-label="이전 달">‹</button><label><span class="sr-only">조회 월</span><input type="month" id="month" min="2000-01" max="2100-12"></label><button id="next-month" aria-label="다음 달">›</button></div></header>
+  <div id="content" aria-busy="true"><div class="loading">우리 집 현황을 불러오고 있어요.</div></div>
+  <footer>가상 데이터 전용 · 실제 금융정보를 입력하지 마세요. <a href="../">전체 현황판 ↗</a><span>Asia/Seoul · 원화 기준</span></footer>
+</main>
+<dialog id="editor"><form id="editor-form"><div class="dialog-heading"><div><p class="eyebrow">MAKE IT YOURS</p><h2 id="editor-title"></h2></div><button type="button" class="icon-button" id="close-editor" aria-label="닫기">×</button></div><p id="editor-note" class="muted"></p><div id="editor-fields"></div><p id="form-error" class="error" role="alert"></p><div class="dialog-actions"><span id="editor-total"></span><button class="primary" type="submit">저장하기</button></div></form></dialog>
+<dialog id="celebration"><button class="icon-button celebration-close" aria-label="축하 화면 닫기">×</button><div class="reward-symbol">✦</div><p class="eyebrow">A LITTLE MORE FOR TOMORROW</p><h2>함께 남긴 여유가<br>우리 집 예비비가 됐어요.</h2><div class="reward-amount" id="reward-amount"></div><p>예비비 배정 완료 · 실제 계좌 이체는 없어요.</p><button class="primary celebration-close">차곡차곡, 잘하고 있어요</button></dialog>
+<div id="toast" role="status" aria-live="polite"></div><div id="confetti" aria-hidden="true"></div>
+</body></html>
