@@ -16,7 +16,7 @@
  * 로컬 화면과 다른 점 (개인정보 분리, 사용자 결정 09-18):
  *   - 말풍선에 **작업 내용**이 올라가지 않는다. 공개 JSON 에 아예 없다.
  *   - 대화·브리핑 이벤트 패널이 없다. 출산 정보도 없다.
- *   - 상태는 실시간이 아니라 '마지막 활동 시각' 에서 추정한다 (5분마다 올라온다).
+ *   - 활동 시각만 공개한다. 실시간 작업 상태를 추정하지 않는다.
  */
 :root {
   --bg:        #0E1420;
@@ -89,78 +89,67 @@ button { font: inherit; color: inherit; }
 @keyframes beat { 50% { opacity: .25; } }
 
 /* --- 사무실 -------------------------------------------------------------- */
+/* 사무실은 **캔버스 한 장**이다 (office.js). 여기서는 그 위에 얹는 글자만 꾸민다.
+ * 벽·바닥·책상을 CSS 로 그리던 시절의 .zone / .seat 규칙은 전부 없앴다 —
+ * 사람이 책상 앞을 지나가려면 앞뒤 순서가 필요한데 DOM 으로는 그릴 수 없다. */
 .floorplan {
   border-radius: 12px; overflow: hidden;
   background: var(--panel); border: 1px solid var(--line);
 }
-.office { min-height: 180px; }
-.zone + .zone { border-top: 1px solid var(--panel-3); }
-.zone-head {
-  background: var(--wall); padding: 9px 12px 7px;
-  display: flex; align-items: center; gap: 8px;
-  border-bottom: 1px solid var(--wall-dark);
-}
+.office { width: 100%; min-height: 180px; padding: 8px 0; }
+
+.stage { position: relative; margin: 0 auto; }
+.scene { display: block; image-rendering: pixelated; }
+.overlay { position: absolute; inset: 0; pointer-events: none; }
+
+/* 방 이름표 — 벽에 걸린 명패. 좌표는 office.js 가 transform 으로 준다. */
 .plate {
-  margin-right: auto;          /* 창문을 벽 오른쪽 끝으로 민다 */
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 3px 10px; border-radius: 6px;
+  position: absolute; top: 0; left: 0; transform-origin: 0 0;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 2px 7px; border-radius: 5px;
   background: #FBF7F1; border: 1px solid var(--wall-dark);
-  font: 400 12.5px/1.4 var(--display); color: #3A3026;
+  font: 400 11.5px/1.45 var(--display); color: #3A3026; white-space: nowrap;
 }
-.plate-n {
-  font: 500 9.5px/1 var(--mono); color: #7A6A57;
-  padding-left: 6px; border-left: 1px solid var(--wall-dark);
-}
-.win {
-  width: 38px; height: 23px; flex-shrink: 0;
-  background:
-    linear-gradient(90deg, transparent 18px, #B3A288 18px, #B3A288 20px, transparent 20px),
-    linear-gradient(180deg, transparent 10px, #B3A288 10px, #B3A288 12px, transparent 12px),
-    linear-gradient(180deg, var(--sky) 0, var(--sky) 55%, #C6E3F4 100%);
-  border: 2px solid #B3A288; border-radius: 2px;
+.plate b {
+  font: 500 9px/1 var(--mono); color: #7A6A57;
+  padding-left: 5px; border-left: 1px solid var(--wall-dark);
 }
 
-.row { display: flex; flex-wrap: nowrap; justify-content: center; background-color: var(--wall); }
-.zone-empty { margin: 0; padding: 16px 12px; background: var(--wall); font-size: 12px; color: #7A6A57; }
-
-.seat {
-  position: relative; display: flex; flex-direction: column; align-items: center;
-  padding: 24px 0 0; margin: 0; border: 0; background: none; cursor: pointer;
+/* 사람 한 명 — 캐릭터 위에 겹쳐 둔 투명 버튼. 걸어다니면 같이 따라간다.
+ * 클릭·키보드·스크린리더가 여기서 공짜로 따라온다 (캔버스는 aria-hidden). */
+.who {
+  position: absolute; top: 0; left: 0; padding: 0; margin: 0; border: 0;
+  background: none; pointer-events: auto; cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.seat canvas.who { display: block; image-rendering: pixelated; }
-.seat .dot {
-  position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
-  width: 7px; height: 7px; border-radius: 99px; background: var(--idle);
-  box-shadow: 0 0 0 2px var(--wall);
-}
-.seat.work .dot { background: var(--work); animation: beat 1.6s ease-in-out infinite; }
-.seat.halt .dot { background: var(--halt); }
-.seat.off  .dot { background: var(--off); }
-.seat .bubble {
-  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-  max-width: calc(100% - 4px); padding: 2px 7px; border-radius: 7px;
+.who .bub {
+  position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  max-width: 118px; padding: 2px 7px; border-radius: 7px;
   background: #FBF7F1; border: 1px solid var(--wall-dark);
-  font: 400 9.5px/1.5 var(--body); color: #3A3026;
+  font: 400 10px/1.55 var(--body); color: #3A3026;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.seat .bubble.mute { opacity: .62; }
-.seat.off { opacity: .55; }
-.seat .tag {
-  width: calc(100% - 8px); margin: 5px 4px 11px; padding: 4px 4px 5px;
-  border-radius: 7px; background: #FBF7F1; border: 1px solid var(--wall-dark);
-  text-align: center;
+/* 한 칸 걸러 말풍선을 더 높이 띄운다 — 옆자리와 겹치지 않게 (office.js 가 켠다) */
+.who.hi .bub { bottom: calc(100% + 26px); }
+/* 말풍선과 머리를 잇는 실선. .bub 에 넣으면 overflow:hidden 에 잘려 안 보인다. */
+.who.hi::after {
+  content: ""; position: absolute; left: 50%; bottom: calc(100% + 9px);
+  width: 1px; height: 17px; background: var(--wall-dark);
 }
-.seat .tag b {
-  display: block; font: 700 11.5px/1.3 var(--body); color: #2E2620;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+
+/* 방 가장자리에서는 가운데 정렬을 버리고 안쪽으로 붙인다 (office.js 가 켠다) */
+.who.bl .bub { left: 0; transform: none; }
+.who.br .bub { left: auto; right: 0; transform: none; }
+.who .nm {
+  position: absolute; top: calc(100% - 1px); left: 50%; transform: translateX(-50%);
+  max-width: 78px; padding: 1px 5px; border-radius: 4px;
+  background: rgba(32,24,16,.74); color: #F6EFE3;
+  font: 600 9.5px/1.6 var(--body);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.seat .tag em {
-  display: block; font-style: normal; font: 400 9.5px/1.4 var(--body); color: #7A6A57;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.seat.work .tag { border-color: #2E9E7B; }
-.seat.on .tag { border-color: var(--sel); box-shadow: 0 0 0 2px rgba(140,160,255,.35); }
+.who.off { opacity: .55; }
+.who.on .nm { background: var(--sel); color: #14121C; }
+.who:focus-visible { outline: 2px solid var(--sel); outline-offset: 2px; border-radius: 4px; }
 
 /* --- 카드 공통 ----------------------------------------------------------- */
 .card { border-radius: 12px; background: var(--panel); border: 1px solid var(--line); overflow: hidden; }
@@ -255,7 +244,7 @@ button { font: inherit; color: inherit; }
 .colophon code { font-family: var(--mono); }
 
 @media (prefers-reduced-motion: reduce) {
-  .conn b::before, .seat.work .dot { animation: none; }
+  .conn b::before { animation: none; }
 }
 @media (max-width: 720px) {
   .app { padding: 10px; gap: 10px; }
@@ -270,7 +259,7 @@ button { font: inherit; color: inherit; }
   <div class="topbar">
     <div class="stat"><b id="s-total">–</b><span>전체</span></div>
     <div class="stat work"><i></i><b id="s-work">–</b><span>작업 중</span></div>
-    <div class="stat"><i></i><b id="s-idle">–</b><span>대기</span></div>
+    <div class="stat"><i></i><b id="s-idle">–</b><span>휴식·대기</span></div>
     <div class="stat halt"><i></i><b id="s-down">–</b><span>정지</span></div>
   </div>
 
@@ -327,30 +316,29 @@ button { font: inherit; color: inherit; }
   </section>
 
   <div class="colophon">
-    집 PC 의 봇이 5분마다 <code>state.json</code> 을 올리고, 이 페이지는 60초마다 그것을 읽습니다.
+    화면을 보는 동안 약 5초마다 상태를 확인합니다. 저장소·네트워크에 따라 지연될 수 있습니다.
     팀 구성 · 활동 <b>시각</b> · 비용 · 호출 수만 담겨 있습니다 — 대화 내용과 개인 일정은 올라오지 않습니다.
     <div id="read-at" style="margin-top:4px"></div>
   </div>
 </div>
 
 <script src="sprites.js"></script>
-<script src="office.js"></script>
+<script src="office.js?v=20260923-motion3"></script>
 <script>
 /* 공개 JSON(state.json)을 office.js 가 아는 모양으로 옮긴다.
  *
- * 로컬 화면은 봇 안에서 status.py 메모리를 직접 읽지만, 여기는 5분마다 올라오는
- * 파일 하나가 전부다. 그래서 **상태를 마지막 활동 시각에서 추정한다.** 실시간이
- * 아니라는 것을 숨기지 않으려고 화면에도 '5분마다 갱신' 이라고 적어 둔다.
+ * 봇이 안전한 상태 분류만 공개 JSON으로 자동 동기화한다. 질문·답변·작업 원문은
+ * 포함하지 않는다. 공개 화면은 저장소 원본을 먼저 읽고 실패하면 Pages로 돌아간다.
  */
-const REFRESH_MS = 60000;
+const REFRESH_MS = 5000;
 const STALE_MIN = 12;     // 이 분을 넘으면 갱신이 늦은 것
 const DEAD_MIN = 40;
-const BUSY_MIN = 8;       // 이 분 안에 움직였으면 '작업 중' 으로 본다
 
 const $ = (id) => document.getElementById(id);
 const usd = (n) => "$" + Number(n).toFixed(n < 1 ? 3 : 2);
 const num = (n) => Number(n).toLocaleString("ko-KR");
 const office = createOffice({ room: "light" });
+window.__office = office;   // 브라우저 콘솔·검증 스크립트에서 사무실을 들여다볼 때
 
 let snap = null;       // 마지막으로 읽은 공개 JSON
 let list = [];         // office.js 가 쓰는 모양으로 옮긴 명단
@@ -366,11 +354,13 @@ function minsSince(iso, nowMs) {
 
 /** 공개 JSON → office.js 의 에이전트 모양. 없는 값은 만들어 넣지 않는다. */
 function adapt(s, nowMs) {
-  const down = !s.bot_alive;
+  const down = !s.bot_alive || minsSince(s.updated, nowMs) >= DEAD_MIN;
   const statusOf = (m) =>
     s.halted ? "halted"
     : down ? "offline"
-    : minsSince(m.last_seen, nowMs) <= BUSY_MIN ? "working" : "idle";
+    : m.status === "success" ? (minsSince(m.status_since, nowMs) < 2 ? "success" : "idle")
+    : m.status === "working" ? "working"
+    : "idle"; // 최근 활동 시각으로 추정하지 않고 봇이 보낸 상태만 쓴다.
 
   const one = (m, team, isLead) => ({
     id: m.key,
@@ -379,9 +369,13 @@ function adapt(s, nowMs) {
     role: m.title,
     team: team,
     isLead: isLead,
+    isChief: !!m.is_chief,
+    parentId: m.parent_id || null,
+    kind: "agent",
+    stateSource: s.live_status_available ? "published" : "activity",
     status: statusOf(m),
-    // 공개 JSON 에는 작업 **내용**이 없다. 말풍선은 상태와 노는 소리만 보여준다.
-    currentTask: null,
+    // 공개 JSON에는 안전한 짧은 분류만 있고 질문·답변·작업 원문은 없다.
+    currentTask: m.status_text || null,
     idleLine: m.idle_line,
     elapsedSec: null,
     lastSeen: m.last_seen,
@@ -389,6 +383,14 @@ function adapt(s, nowMs) {
   });
 
   // 공개 JSON 의 팀에는 키가 없다 (이모지·이름뿐). 자리 배치용 키를 여기서 붙인다.
+  if (s.roster) {
+    const rows = s.roster.map(m => one(m, m.team, m.is_lead));
+    for (const resident of s.residents || []) rows.push({
+      id: resident.key, name: resident.name, role: resident.title, team: "office",
+      kind: "user", status: "idle", isChief: false, isLead: false, stateSource: "avatar",
+    });
+    return { rows, zs: s.zones };
+  }
   const zs = s.teams.map((t, i) => ({ key: "z" + i, emoji: t.emoji, label: t.label }));
   const rows = [one(s.lead, "lead", true)];
   s.teams.forEach((t, i) => {
@@ -397,24 +399,22 @@ function adapt(s, nowMs) {
   return { rows, zs };
 }
 
-function deskScale() {
-  const w = $("office").clientWidth || 640;
-  if (w >= 760) return 5;
-  if (w >= 420) return 4;
-  return 3;
+/* 사무실이 차지해도 되는 세로. 폰에서는 스크롤되는 페이지라 넉넉히 준다. */
+function officeBudget() {
+  return Math.max(430, Math.min(720, Math.round(window.innerHeight * 0.58)));
 }
 
 function renderSummary(s, nowMs) {
   const sum = summarize(list);
   $("s-total").textContent = sum.total;
-  $("s-work").textContent = sum.working;
-  $("s-idle").textContent = sum.idle;
+  $("s-work").textContent = s.live_status_available ? sum.working : "–";
+  $("s-idle").textContent = s.live_status_available ? sum.idle : "–";
   $("s-down").textContent = sum.halted + sum.offline;
 
   // 순서가 중요하다: 비상 정지 > 봇 꺼짐 > 갱신 끊김 > 지연 > 정상
   const mins = (nowMs - new Date(s.updated).getTime()) / 60000;
   const conn = $("conn");
-  let cls = "", text = "정상 가동";
+  let cls = "", text = s.live_status_available ? "상태 자동 동기화" : "활동 기록 갱신됨";
   if (s.halted) { cls = "halt"; text = "비상 정지"; }
   else if (s.bot_alive === false) { cls = "down"; text = "봇 꺼짐"; }
   else if (mins >= DEAD_MIN) { cls = "down"; text = "갱신 끊김"; }
@@ -422,7 +422,8 @@ function renderSummary(s, nowMs) {
   conn.className = "conn" + (cls ? " " + cls : "");
   $("conn-t").textContent = text;
   const ago = agoText(s.updated, nowMs);
-  $("conn-s").textContent = (ago ? "갱신 " + ago : "") + " · 5분마다 올라옵니다";
+  $("conn-s").textContent = (ago ? "갱신 " + ago : "") +
+    (s.live_status_available ? " · 약 5초마다 확인 · 전송 지연 가능" : " · 마지막 내보내기 기준");
 }
 
 function renderPick() {
@@ -431,12 +432,13 @@ function renderPick() {
   if (!a) { box.hidden = true; return; }
   box.hidden = false;
 
-  const meta = statusMeta(a.status);
+  const meta = !snap.live_status_available && a.status === "idle"
+    ? {label: "실시간 상태 미연결", tone: "off"} : statusMeta(a.status);
   const body = $("pick-body");
   body.textContent = "";
 
   const cv = document.createElement("canvas");
-  paintDesk(cv, a.id, { scale: 3, mode: deskMode(a.status), palette: office.palette() });
+  paintPortrait(cv, a.id, { scale: 3, mode: deskMode(a.status), palette: office.palette() });
   const who = document.createElement("div");
   const n = document.createElement("div"); n.className = "who-n"; n.textContent = a.name;
   const r = document.createElement("div"); r.className = "who-r"; r.textContent = a.role;
@@ -457,10 +459,12 @@ function renderPick() {
 function renderList() {
   const ul = $("list");
   ul.textContent = "";
-  $("l-count").textContent = list.length + "명";
-  const top = Math.max(1, ...list.map((a) => a.calls7d));
-  for (const a of list) {
-    const meta = statusMeta(a.status);
+  const agentRows = list.filter(a => a.kind !== "user");
+  $("l-count").textContent = agentRows.length + "명";
+  const top = Math.max(1, ...agentRows.map((a) => a.calls7d || 0));
+  for (const a of agentRows) {
+    const meta = !snap.live_status_available && a.status === "idle"
+      ? {label: "실시간 상태 미연결", tone: "off"} : statusMeta(a.status);
     const li = document.createElement("li");
     const b = document.createElement("button");
     b.type = "button";
@@ -533,10 +537,9 @@ function render(s) {
   list = a.rows;
   zones = a.zs;
 
-  assignLooks(list.map((x) => x.id));
   renderSummary(s, nowMs);
   renderOffice($("office"), office, list, zones,
-               { scale: deskScale(), onSelect: select, selectedId: selected });
+               { maxH: officeBudget(), onSelect: select, selectedId: selected });
   renderPick();
   renderList();
   const week = renderHeat(s.activity);
@@ -562,16 +565,63 @@ function render(s) {
     new Date().toLocaleString("ko-KR", { hour: "2-digit", minute: "2-digit" });
 }
 
+// Read only the existing public state; no credentials or private API endpoints.
+// The raw repository file becomes available without waiting for a Pages build.
+class PublicStateReader {
+  constructor({rawUrl=null,pageUrl='state.json',fetcher=(...args)=>fetch(...args),now=Date.now,timeoutMs=4500}={}) {
+    Object.assign(this,{rawUrl,pageUrl,fetcher,now,timeoutMs});
+    this.latest=null;this.pending=null;this.retryRawAt=0;
+  }
+  async request(url) {
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),this.timeoutMs);
+    try {
+      const res=await this.fetcher(url+'?t='+this.now(),{cache:'no-store',credentials:'omit',redirect:'error',signal:controller.signal});
+      if(!res.ok)throw new Error('state HTTP '+res.status);
+      const state=await res.json();
+      if(!Number.isFinite(Date.parse(state.updated))||!Array.isArray(state.roster)||!Array.isArray(state.zones)||!state.cost||!state.articles)
+        throw new Error('invalid public state');
+      return state;
+    } finally {clearTimeout(timer);}
+  }
+  read() {
+    if(!this.pending)this.pending=this.load().finally(()=>{this.pending=null;});
+    return this.pending;
+  }
+  async load() {
+    const urls=this.rawUrl&&this.now()>=this.retryRawAt?[this.rawUrl,this.pageUrl]:[this.pageUrl];
+    for(const url of urls){
+      try {
+        const state=await this.request(url);
+        // A fallback/cached response must never undo a newer work or completion event.
+        if(this.latest&&Date.parse(state.updated)<Date.parse(this.latest.updated))continue;
+        this.latest=state;this.source=url===this.rawUrl?'repository':'pages';return state;
+      } catch(e) {
+        if(url===this.rawUrl)this.retryRawAt=this.now()+30000;
+      }
+    }
+    throw new Error('no fresh public state');
+  }
+}
+const stateReader=new PublicStateReader({rawUrl:location.hostname==='janbommi.github.io'
+  ?'https://raw.githubusercontent.com/Janbommi/public_web/main/state.json':null});
+let refreshTimer=null,reading=false,readFailures=0;
 async function tick() {
+  if(reading||document.hidden)return;
+  clearTimeout(refreshTimer);reading=true;
   try {
-    const res = await fetch("state.json?t=" + Date.now(), { cache: "no-store" });
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    render(await res.json());
+    render(await stateReader.read());readFailures=0;
+    $("conn").dataset.source=stateReader.source;
   } catch (e) {
+    readFailures++;
+    if(snap)render(snap); // Expire old success/offline status even during an outage.
     const conn = $("conn");
     conn.className = "conn down";
-    $("conn-t").textContent = "상태를 읽을 수 없음";
-    $("conn-s").textContent = "";
+    $("conn-t").textContent = "상태 갱신 지연";
+    $("conn-s").textContent = snap?"마지막 수신 상태 표시 · 연결 재시도 중":"연결 재시도 중";
+  } finally {
+    reading=false;
+    if(!document.hidden)refreshTimer=setTimeout(tick,Math.min(60000,REFRESH_MS*2**Math.min(readFailures,4)));
   }
 }
 
@@ -588,7 +638,10 @@ window.addEventListener("resize", () => {
 });
 
 tick();
-setInterval(tick, REFRESH_MS);
+document.addEventListener('visibilitychange',()=>{
+  clearTimeout(refreshTimer);
+  if(!document.hidden)tick();
+});
 </script>
 </body>
 </html>
