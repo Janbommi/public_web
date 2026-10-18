@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>개인정보처리방침 · auto_push</title><link rel="stylesheet" href="style.css"></head>
+<body><main>
+<nav aria-label="문서"><a href="index.html">앱 소개</a><a href="privacy.html" aria-current="page">개인정보처리방침</a><a href="terms.html">이용 안내·약관</a></nav>
+<p class="eyebrow">auto_push · 2026년 10월 18일 작성</p><h1>개인정보처리방침</h1>
+<p>auto_push는 개인 운영자가 자신의 일정과 할 일을 관리하기 위해 사용하는 비서 봇입니다. 이 안내는 Google Calendar 연결, 브리핑과 그 후속 대화에서 처리되는 정보를 설명합니다.</p>
+<h2>1. 접근하는 정보와 목적</h2>
+<p>Google의 <code>calendar.readonly</code> 권한으로 기본 캘린더의 오늘 일정 및 대한민국 휴일을 조회합니다. 일정 식별자, 제목, 시작·종료 시각, 색상, 취소 여부, 본인의 참석 응답을 브리핑에 필요한 형태로 처리합니다. API 응답에는 이 밖의 일정 속성이 포함될 수 있으나 브리핑용으로 정리하는 항목은 위 정보에 한정됩니다. Google 일정의 생성·수정·삭제 권한은 요청하지 않습니다.</p>
+<p>사용자가 별도로 연결한 Notion의 오늘 할 일과 공개 날씨 정보도 브리핑에 함께 표시할 수 있습니다. Notion 연결은 Google 권한과 별개입니다.</p>
+<h2>2. 정보가 전달되는 곳</h2>
+<ul><li>Google: 사용자의 동의에 따라 인증 및 Calendar API 조회를 처리합니다.</li><li>Telegram: 일정이 포함된 브리핑을 지정된 개인 대화방으로 전달하고 메시지를 보관합니다.</li><li>Anthropic API: 아침 일정 브리핑 자체는 AI 호출 없이 생성합니다. 이후 사용자가 비서 봇에게 질문하면 최근 브리핑·대화 일부가 답변 생성용 맥락에 포함되어 전달될 수 있습니다.</li></ul>
+<p>Google에서 얻은 데이터와 그 파생 정보는 사용자가 이용하는 일정 브리핑 및 비서 답변 기능에만 사용합니다. 광고, 판매, 신용평가 또는 범용 AI 모델 학습용 데이터로 제공하지 않습니다. Google API에서 받은 정보의 사용 및 다른 서비스로의 전송은 <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>의 Limited Use 요구사항을 따릅니다.</p>
+<h2>3. 저장과 보관</h2>
+<p>OAuth 액세스·갱신 토큰은 운영 PC의 비공개 인증 파일에 저장합니다. 발송된 브리핑은 로컬 데이터베이스에, 발송 날짜와 처리 상태는 발송 원장에 저장합니다. 운영 복구 과정에서 브리핑 자료와 데이터베이스 백업을 비공개 로컬 파일로 보관할 수 있습니다. 인증 파일과 개인 자료는 공개 웹사이트 및 소스 저장소 게시 대상에서 제외합니다.</p>
+<p>현재 로컬 기록에는 정해진 기간 후 자동 삭제하는 기능이 없습니다. 운영자가 삭제할 때까지 보관될 수 있으며, 삭제할 때는 원본과 백업을 함께 확인합니다. Telegram 등 외부 서비스의 사본은 해당 서비스의 보관 정책과 삭제 기능을 따릅니다.</p>
+<h2>4. 연결 해제와 삭제</h2>
+<p><a href="https://myaccount.google.com/connections">Google 계정의 타사 연결 관리</a>에서 auto_push의 접근을 철회할 수 있습니다. 철회는 이후 Google 조회를 막지만 이미 만들어진 브리핑과 백업을 자동 삭제하지는 않습니다. 저장 토큰·브리핑·백업의 삭제는 아래 연락처로 요청할 수 있으며, Telegram의 기존 메시지는 해당 대화방에서도 별도로 삭제해야 합니다.</p>
+<h2>5. 공개 안내 웹사이트</h2>
+<p>이 안내 페이지에는 로그인 폼, 광고, 분석 스크립트가 없습니다. GitHub Pages 호스팅 과정에서는 서비스 제공자가 접속 정보를 처리할 수 있습니다. 개인 일정과 인증정보는 이 페이지에 포함하지 않습니다.</p>
+<h2>6. 문의 및 변경</h2>
+<p>담당: auto_push 개인 운영자 · <a href="mailto:ssabumi91@gmail.com">ssabumi91@gmail.com</a><br>데이터 사용 목적이나 공유 범위를 바꾸는 경우 안내를 갱신하고 필요한 동의를 먼저 받습니다.</p>
+<footer><a href="index.html">앱 소개로 돌아가기</a></footer>
+</main></body></html>

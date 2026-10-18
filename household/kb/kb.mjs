@@ -1,0 +1,20 @@
+import {createClient} from '../account/supabase.mjs';
+import {createSessionStorage,SESSION_KEY} from '../account/session.mjs';
+import {currentKstMonth} from '../connect/months.mjs';
+const $=x=>document.querySelector(x),storage=createSessionStorage(()=>localStorage);
+const client=createClient('https://xcchskngoactqsiiutsp.supabase.co','sb_publishable_sONZt44kSnkbF8mjzoAgGQ_QOfmwm1v',{auth:{persistSession:true,storage,storageKey:SESSION_KEY,autoRefreshToken:true,detectSessionInUrl:false},global:{fetch:(url,opts={})=>fetch(url,{...opts,cache:'no-store',signal:AbortSignal.timeout(15000)})}});
+let epoch=0,signedIn=false,busy=false,card=null;
+const hideKey=()=>{$('#key').value='';$('#key-box').hidden=true;};
+const clear=(message='로그인 후 KB 연결을 확인하세요.')=>{epoch++;signedIn=false;card=null;busy=false;hideKey();$('#revoke-dialog').close();$('#summary').hidden=true;$('#login').hidden=false;$('#status').textContent=message;};
+function controls(){for(const id of ['pair','revoke','refresh','copy','confirm-revoke'])$('#'+id).disabled=busy;}
+async function rpc(name,args){const {data,error}=await client.rpc(name,args);if(error)throw Error('request');return data;}
+async function refresh(){if(!signedIn||busy)return;const e=epoch;busy=true;controls();$('#status').textContent='확인 중…';try{const cards=await rpc('card_tracking',{p_month:currentKstMonth()});if(e!==epoch)return;card=cards.find(x=>x.card==='kb');$('#summary').hidden=false;$('#login').hidden=true;$('#connection-state').textContent=({'not-paired':'연결 전','revoked':'연결 해제됨','expired':'연결 만료','profile-pending':'폰에서 카드 확인 대기','pilot':'KB 수집 연결됨'})[card.state]??'상태 확인 필요';$('#pair').hidden=!card.canPair||!!card.deviceId;$('#revoke').hidden=!card.deviceId;$('#status').textContent='';}catch{if(e===epoch){card=null;$('#summary').hidden=true;$('#status').textContent='연결 상태를 불러오지 못했어요. 새로고침해 주세요.';}}finally{if(e===epoch){busy=false;controls();}}}
+$('#pair').onclick=async()=>{if(busy||!card?.canPair||card.deviceId)return;const e=epoch;let resultMessage='';busy=true;controls();hideKey();const key=[...crypto.getRandomValues(new Uint8Array(32))].map(n=>n.toString(16).padStart(2,'0')).join('');try{await rpc('kb_register_device',{p_token:key});if(e!==epoch)return;$('#key').value=key;$('#key-box').hidden=false;resultMessage='KB 키를 만들었어요.';}catch{resultMessage='발급 결과를 확인하지 못했어요. 연결이 생겼다면 해제하고 다시 발급하세요.';}finally{if(e===epoch){busy=false;controls();await refresh();if(e===epoch&&resultMessage)$('#status').textContent=resultMessage;}}};
+$('#copy').onclick=async()=>{if(!$('#key').value)return;const e=epoch;try{await navigator.clipboard.writeText($('#key').value);if(e===epoch)$('#status').textContent='KB 키를 복사했어요. 앱의 KB 연결 설정에 붙여넣으세요.';}catch{if(e===epoch)$('#status').textContent='복사하지 못했어요. 브라우저의 클립보드 권한을 확인해 주세요.';}};
+$('#hide').onclick=hideKey;$('#refresh').onclick=refresh;
+$('#revoke').onclick=()=>{if(card?.deviceId&&!busy)$('#revoke-dialog').showModal();};$('#cancel-revoke').onclick=()=>$('#revoke-dialog').close();
+$('#confirm-revoke').onclick=async()=>{if(busy||!card?.deviceId)return;const e=epoch,id=card.deviceId;let resultMessage='';busy=true;controls();try{await rpc('hana_revoke_device',{p_device:id});if(e!==epoch)return;hideKey();$('#revoke-dialog').close();}catch{resultMessage='해제 결과를 확인하지 못했어요. 새로고침해서 상태를 확인해 주세요.';}finally{if(e===epoch){busy=false;controls();await refresh();if(e===epoch&&resultMessage)$('#status').textContent=resultMessage;}}};
+client.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(event==='TOKEN_REFRESHED'&&!session)){storage.forget();clear();}});
+addEventListener('storage',event=>{if((event.key===SESSION_KEY&&event.newValue===null)||event.key===null){storage.forget();clear();}});
+addEventListener('pagehide',()=>clear());addEventListener('pageshow',event=>{if(event.persisted)location.reload();});
+const initial=epoch;try{const {data,error}=await client.auth.getSession();if(initial===epoch){if(!error&&data.session){signedIn=true;await refresh();}else clear();}}catch{clear();}

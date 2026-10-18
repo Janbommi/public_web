@@ -1,14 +1,11 @@
 <!doctype html>
 <html lang="ko">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://xcchskngoactqsiiutsp.supabase.co; object-src 'none'; base-uri 'none'; form-action 'none'"><title>우리 집 · 함께 보는 자산</title><link rel="icon" href="../favicon.svg"><link rel="stylesheet" href="./account.css"><script type="module" src="./account.js"></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://xcchskngoactqsiiutsp.supabase.co; object-src 'none'; base-uri 'none'; form-action 'none'"><title>우리 집 · 함께 보는 자산</title><link rel="icon" href="../favicon.svg"><link rel="stylesheet" href="./account.css?v=design07"><script type="module" src="./account.js?v=live-budget1"></script></head>
 <body><main>
-<header><a href="../">← 가상 미리보기</a><span>OUR HOME, OUR PACE</span></header>
-<section class="intro"><p class="eyebrow">PRIVATE HOUSEHOLD</p><h1>우리의 오늘을,<br>함께 쌓아가요.</h1><p>허용된 두 계정으로 보는 우리 집 자산.<br>잔액과 확인한 날짜를 함께 남깁니다.</p></section>
-<p class="notice">연결 준비 단계 · 실제 금융자료는 초기 이관·대조가 끝난 뒤 입력해 주세요. 예산과 카드 자동수집은 아직 연결 전입니다.</p>
-<section id="login-panel" class="panel"><h2>우리 집에 로그인</h2><p class="muted">등록한 이메일과 비밀번호로 로그인해 주세요.</p>
-<form id="login-form"><label>이메일<input name="email" type="email" autocomplete="username" required></label><label>비밀번호<input name="password" type="password" autocomplete="current-password" required></label><button type="submit">로그인</button></form>
-<p class="muted small">로그인은 이 탭에서만 유지됩니다. 새로고침하거나 탭을 닫으면 다시 로그인해 주세요.</p></section>
-<div id="account-actions" hidden><button id="reload" class="secondary">공유 잔액 다시 불러오기</button><button id="logout" class="secondary">로그아웃</button></div>
+<header class="brand"><img src="../connect/app-icon.png" width="44" height="44" alt=""><a href="../connect/">째미즈 <span>asset</span></a><span class="private-label">우리 집만 보는 자산</span></header><nav class="home-nav" aria-label="우리 집 메뉴"><a href="../budget/">월 예산</a><a href="../account/" aria-current="page">공유 자산</a><a href="../connect/">카드 연결</a></nav><section class="intro"><p class="eyebrow">OUR HOME · ASSETS</p><h1>공유 자산</h1><p>마지막으로 확인한 잔액을 모았어요.</p></section><section id="login-panel" class="panel"><h2>우리 집에 로그인</h2><p class="muted">등록한 이메일과 비밀번호로 로그인해 주세요.</p>
+<form id="login-form"><label>이메일<input name="email" type="email" autocomplete="username" required></label><label>비밀번호<input name="password" type="password" autocomplete="current-password" required></label><label class="check"><input id="remember" name="remember" type="checkbox" checked>내 기기에서 로그인 유지</label><button type="submit" disabled>로그인</button></form>
+<p id="session-note" class="muted small">공용 기기에서는 로그인 유지를 해제해 주세요.</p></section>
+<div id="account-actions" hidden><button id="reload" class="secondary">새로고침</button><button id="logout" class="secondary">로그아웃</button></div>
 <p id="message" role="status" aria-live="polite"></p><section id="assets" aria-busy="false"></section>
-<footer>Asia/Seoul · 원화 기준 · 거래내역과 가맹점 상세는 공유하지 않습니다.</footer>
+<details class="account-guide"><summary>안내사항 · 자산과 로그인</summary><p>초기 자산은 제공된 엑셀에서 이관하고 합계를 대조했습니다. 관측일이 확인되지 않은 잔액은 기준일 미확인으로 표시합니다. 잔액은 마지막 확인 시점 기준이며 실시간 금융기관 잔액이 아닙니다.</p><p>하나카드 수집 합계는 ‘카드 합계’에서 확인하세요. 월 예산에는 수집된 카드 합계가 반영됩니다.</p><p>개인 기기에서는 로그인을 유지할 수 있습니다. 공용 기기에서는 선택을 해제하고 사용 후 로그아웃해 주세요. 거래내역·가맹점은 공유하지 않습니다. 관리 구분 ‘가계’는 법적 공동명의를 뜻하지 않습니다.</p></details><footer>한국 시간 기준 · 원화</footer>
 </main></body></html>

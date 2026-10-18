@@ -319,6 +319,7 @@ function installOfficeStyle() {
   @media(max-width:520px){.bar{padding:5px 8px}.note{padding:4px 8px;font-size:10px}.office{padding:0}.office-shell{padding:3px 0}}
   `;
   document.head.append(style);
+  const pageTheme=document.getElementById('page-theme');if(pageTheme)document.head.append(pageTheme);
 }
 
 function createOffice(opts={}) {
@@ -470,7 +471,7 @@ function createOffice(opts={}) {
     }
     const countState=k=>sc.list.filter(a=>a.status===k).length;
     const summary=[['working','작업'],['waiting','답변 대기'],['error','오류'],['thinking','생각 중']].filter(([k])=>countState(k)).map(([k,name])=>name+' '+countState(k)).join(' · ');
-    const heading=summary||(first?'첫 버전 · 현주와 투자정보팀':'우리들의 작은 사무실');
+    const heading='';
     if(sc.title.textContent!==heading)sc.title.textContent=heading;
     rects.push(...bodies);
     candidates.sort((a,b)=>b.priority-a.priority);
@@ -494,7 +495,7 @@ function createOffice(opts={}) {
     if(sc.detail.textContent!==detail)sc.detail.textContent=detail;
     if(sc.requestId!==selected){
       sc.requestId=selected;sc.requests.replaceChildren();
-      if(focus&&focus.kind!=='user')sc.requests.append(requestCard(focus));
+      if(focus&&focus.kind!=='user'&&(!sourceOpts.onSelect||opts.smallWindow))sc.requests.append(requestCard(focus));
     }
   }
   function frame(t) {
@@ -526,7 +527,7 @@ function createOffice(opts={}) {
     assignLooks(actual.map(a=>a.id));
     const shell=document.createElement('section');shell.className='office-shell'+(compact?' compact':'')+(opts.smallWindow?' widget':'');
     const heading=document.createElement('div');heading.className='office-heading';
-    const title=document.createElement('strong');title.textContent=first?'첫 버전 · 현주와 투자정보팀':'우리들의 작은 사무실';
+    const title=document.createElement('strong');title.textContent='';
     const source=document.createElement('span');source.className='office-source'+(demo?' demo':'');
     source.textContent=demo?'동작 미리보기 · 실제 작업 아님':actual.some(a=>a.stateSource==='snapshot')?'미리보기 · 실시간 상태 미연결':actual.some(a=>a.stateSource==='published')?'마지막 수신 상태 기준':actual.some(a=>a.stateSource==='activity')?'활동 이력 · 실시간 상태 미연결':'실제 상태';
     heading.append(title,source);shell.append(heading);
@@ -557,7 +558,7 @@ function createOffice(opts={}) {
     const bubbles=document.createElement('div');bubbles.style.cssText='position:absolute;inset:0;z-index:900;pointer-events:none';over.append(bubbles);
     const detail=document.createElement('div');detail.className='office-detail';detail.setAttribute('aria-live','polite');
     const requests=document.createElement('div');
-    const caption=document.createElement('p');caption.className='office-caption';caption.textContent='캐릭터를 눌러 부탁할 일을 골라보세요. 산책·커피·수다는 휴식 연출이에요.';
+    const caption=document.createElement('p');caption.className='office-caption';caption.hidden=true;
     stage.append(canvas,over);shell.append(stage,detail,requests,caption);root.replaceChildren(shell);
     sc={sig,plan,scale,canvas,ctx:canvas.getContext('2d'),bg:document.createElement('canvas'),tags,bubbles,detail,requests,requestId:null,plates,title,list:actual};sc.ctx.imageSmoothingEnabled=false;
     const old=new Map(motion);motion.clear();
@@ -573,3 +574,98 @@ function createOffice(opts={}) {
 }
 function renderOffice(root,office,list,zones,opts){office.build(root,list,zones,opts||{});}
 if(typeof module!=='undefined')module.exports={OfficeModel,STATUS,bubbleText,motionText,summarize};
+
+/* Read-only profile and an in-memory request draft. No outgoing model/API calls. */
+function initPageTheme() {
+  const set=theme=>{
+    document.documentElement.dataset.theme=theme;
+    document.querySelectorAll('[data-page-theme]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.pageTheme===theme)));
+    const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.content=theme==='charcoal'?'#131311':'#F3F0E9';
+  };
+  let theme='beige';try{if(localStorage.getItem('ssabu-page-theme')==='charcoal')theme='charcoal';}catch{}
+  set(theme);
+  document.querySelectorAll('[data-page-theme]').forEach(b=>b.addEventListener('click',()=>{set(b.dataset.pageTheme);try{localStorage.setItem('ssabu-page-theme',b.dataset.pageTheme);}catch{}}));
+}
+
+function createMemberPanel({getData,onSelect,publicView=false}) {
+  const duties={hyeonju:'오늘 일정과 할 일을 챙기고, 여러 팀에 필요한 요청을 연결합니다.',kevin:'투자정보팀의 보고를 종합하고, 서로 다른 분야의 맥락과 확인할 사항을 정리합니다.',suji:'보유·관심종목의 가격 조건과 관련 자료에서 중요한 변화를 점검합니다.',seungcho:'국내·미국 주식의 시장 흐름과 종목 자료를 분석합니다.',hyeoncheol:'국내 부동산 시장과 관련 정책의 변경점·영향을 정리합니다.',buljang:'크립토 시장 흐름과 코인별 자료를 확인합니다.',jiyoung:'AI 산업의 새로운 소식과 주요 흐름을 정리합니다.',jjaemi:'째미즈 팀의 보고를 종합하고 필요한 담당자에게 요청을 연결합니다.',jjaemi1:'출산·육아 관련 소식과 지원 정보를 살펴봅니다.',jjaemi2:'가족 일정과 준비할 기한을 챙깁니다.'};
+  const dialog=document.createElement('dialog');dialog.className='member-dialog';dialog.setAttribute('aria-labelledby','member-name');
+  const head=document.createElement('header');head.className='member-header';
+  const portrait=document.createElement('canvas');portrait.setAttribute('aria-hidden','true');
+  const identity=document.createElement('div'),name=document.createElement('h2'),role=document.createElement('p');name.id='member-name';identity.append(name,role);
+  const close=document.createElement('button');close.type='button';close.className='member-close';close.textContent='×';close.setAttribute('aria-label','팀원 상세 닫기');
+  close.addEventListener('click',()=>dialog.close());head.append(portrait,identity,close);
+  const tabs=document.createElement('nav');tabs.className='member-tabs';tabs.setAttribute('aria-label','팀원 상세 메뉴');
+  const content=document.createElement('section');content.className='member-content';
+  const drafts=new Map();let active=null,tab='overview',signature='',returnFocus=null;
+  const tabButtons=new Map();
+  for(const [key,label] of [['overview','담당 정보'],['request','요청 작성'],['activity','활동']]){
+    const b=document.createElement('button');b.type='button';b.textContent=label;b.setAttribute('aria-controls','member-content');
+    b.addEventListener('click',()=>{tab=key;signature='';render();});tabs.append(b);tabButtons.set(key,b);
+  }
+  content.id='member-content';dialog.append(head,tabs,content);document.body.append(dialog);
+  dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
+  dialog.addEventListener('close',()=>{if(returnFocus?.isConnected)returnFocus.focus({preventScroll:true});});
+  function el(tag,text,cls){const x=document.createElement(tag);if(text!==undefined)x.textContent=text;if(cls)x.className=cls;return x;}
+  function button(text,fn,cls='member-button'){const b=el('button',text,cls);b.type='button';b.addEventListener('click',fn);return b;}
+  function facts(rows){const dl=el('dl',undefined,'member-facts');for(const [k,v] of rows){const d=el('div');d.append(el('dt',k),el('dd',v));dl.append(d);}return dl;}
+  function statusMetaFor(a){return a.status!=='offline'&&['activity','snapshot'].includes(a.stateSource)?{label:'실시간 상태 미연결',tone:'off'}:statusMeta(a.status);}
+  function render(){
+    const data=getData(),rows=data?.rows||[],a=rows.find(x=>x.id===active);
+    if(!a){if(dialog.open)dialog.close();return;}
+    const meta=statusMetaFor(a);name.textContent=a.name;role.textContent=a.role;
+    paintPortrait(portrait,a.id,{scale:3,mode:deskMode(a.status),palette:{...ROOM_LIGHT}});
+    for(const [key,b] of tabButtons){b.setAttribute('aria-pressed',String(key===tab));b.hidden=a.kind==='user'&&key!=='overview';}
+    // Polling must not reset focus, selection, textarea edits or clipboard feedback.
+    const next=JSON.stringify([active,tab,a.status,a.currentTask,a.lastSeen,a.calls7d,a.callsToday,a.stateSource,data.timeline,data.showText,Math.floor(Date.now()/60000)]);
+    if(next===signature)return;
+    if(tab==='request'&&content.dataset.view===active+':request')return;
+    const focused=content.contains(document.activeElement);signature=next;content.dataset.view=active+':'+tab;content.replaceChildren();
+    if(tab==='overview'){
+      const badge=el('span',a.kind==='user'?'사용자 공간':meta.label,'member-status '+meta.tone);content.append(badge);
+      content.append(el('h3','담당 업무'),el('p',a.kind==='user'?'싸부의 자리입니다. 팀원을 선택해 담당 업무와 활동을 확인하세요.':duties[a.id]||a.role));
+      if(a.kind==='user')return;
+      const current=['activity','snapshot'].includes(a.stateSource)?'상태가 연결되면 표시됩니다.':a.currentTask||(a.status==='idle'?'현재 진행 중인 작업이 없습니다.':meta.label);
+      content.append(el('h3','현재 상태'),el('p',current));
+      content.append(facts([['마지막 활동',agoText(a.lastSeen)||'기록 없음'],[publicView?'최근 7일 호출':'오늘 호출',Number(publicView?a.calls7d:a.callsToday||0).toLocaleString('ko-KR')+'회']]));
+      const parent=rows.find(x=>x.id===a.parentId),children=rows.filter(x=>x.parentId===a.id);
+      content.append(el('h3','보고 관계'));
+      const related=el('div',undefined,'member-links');
+      if(parent)related.append(button('보고 대상 · '+parent.name,()=>onSelect(parent.id),''));
+      else related.append(el('span',a.isChief?'사용자에게 보고':'등록된 보고 대상 없음','member-help'));
+      for(const c of children)related.append(button(c.name+' · '+c.role,()=>onSelect(c.id),''));
+      content.append(related,el('h3','바로 가기'));
+      content.append(button('요청 작성하기',()=>{tab='request';signature='';render();},'member-button member-primary'));
+    } else if(tab==='request'){
+      content.append(el('p','예시를 골라 내용을 다듬고, 담당 봇 대화방에서 보내세요.','member-help'));
+      const sampleBox=el('div',undefined,'member-examples');
+      const input=el('textarea',undefined,'member-input');input.id='member-draft';input.maxLength=2000;
+      input.value=drafts.get(a.id)||'';input.placeholder=a.name+'에게 부탁할 내용을 적어주세요';
+      input.addEventListener('input',()=>drafts.set(a.id,input.value));
+      const label=el('label','요청 내용','member-label');label.htmlFor=input.id;
+      for(const sample of REQUESTS[a.id]||[a.name+'님, 담당 업무 알려줘'])sampleBox.append(button(sample,()=>{input.value=sample;drafts.set(a.id,sample);input.focus();},''));
+      sampleBox.append(button('정기 일정 문의',()=>{input.value='/schedule';drafts.set(a.id,input.value);input.focus();},''));
+      const feedback=el('div','','member-feedback');feedback.setAttribute('role','status');
+      const copy=button('요청문 복사',async()=>{
+        if(!input.value.trim()){feedback.textContent='먼저 요청 내용을 입력해주세요.';input.focus();return;}
+        try{await navigator.clipboard.writeText(input.value);feedback.textContent='복사했습니다. 담당 봇에 붙여 넣고 보내주세요.';}
+        catch{feedback.textContent='복사 권한이 없습니다. 요청문을 선택해 직접 복사해주세요.';input.focus();input.select();}
+      },'member-button member-primary');
+      const link=el('a','담당 봇 열기 ↗','member-button');link.href=BOT_LINKS[a.team]||BOT_LINKS.office;link.target='_blank';link.rel='noopener noreferrer';
+      const actions=el('div',undefined,'member-actions');actions.append(copy,link);actions.style.marginTop='14px';
+      content.append(sampleBox,label,input,actions,feedback,el('p','이 화면에서는 자동으로 발송하지 않습니다. 작성 내용은 페이지를 떠나면 사라집니다.','member-help'));
+    } else {
+      content.append(facts([['마지막 활동',agoText(a.lastSeen)||'기록 없음'],[publicView?'최근 7일 호출':'오늘 호출',Number(publicView?a.calls7d:a.callsToday||0).toLocaleString('ko-KR')+'회']]));
+      if(publicView){content.append(el('h3','활동 공개 범위'),el('p','공개 화면에는 활동 시각과 호출 수만 표시합니다. 대화·보고 내용은 담당 텔레그램에서 확인하세요.','member-help'));}
+      else{
+        const events=(data.timeline||[]).filter(e=>e.who===a.name).slice(0,12);content.append(el('h3','최근 활동'));
+        if(!events.length)content.append(el('p','최근 활동 기록이 없습니다.','member-help'));
+        const ul=el('ul',undefined,'member-events');
+        for(const e of events){const li=el('li');const at=new Date(/[+Z]/.test(e.ts||'')?e.ts:e.ts+'Z');const stamp=Number.isFinite(at.getTime())?at.toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})+' KST':'시각 없음';li.append(el('time',stamp+' · '+e.role_label),el('p',data.showText===false?'내용 숨김':e.preview));ul.append(li);}content.append(ul);
+      }
+    }
+    if(focused)tabButtons.get(tab).focus({preventScroll:true});
+  }
+  function open(id){active=id;tab='overview';signature='';content.dataset.view='';render();if(!dialog.open){returnFocus=document.activeElement;dialog.showModal();close.focus({preventScroll:true});}}
+  return {open,refresh(){if(dialog.open)render();}};
+}

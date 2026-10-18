@@ -1,0 +1,12 @@
+{
+  "appName": "째미즈 asset",
+  "version": "0.8-kb-pilot",
+  "versionCode": 8,
+  "sha256": "394bd933297b3c39300dca8243af995e3d1ea15d9f00f8444470a7a0054939cb",
+  "bytes": 234051,
+  "network": "fixed Supabase probe, content-free diagnostic, confirmed Hana and KB domestic purchases; KB cumulative observation",
+  "diagnostics": "local latest 32 callbacks for 7 days; server latest status per device; bounded event-driven retries",
+  "deviceTested": false,
+  "securityWarning": "Prior 0.7 OS warning unresolved; no bypass or external scanner clearance claimed",
+  "upgrade": "same package and signer; v1 Hana outbox readable; KB opt-in with separate key"
+}
