@@ -1,0 +1,107 @@
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): false
+Verified using v3 scheme (APK Signature Scheme v3): true
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=Household Local Collector
+Signer #1 certificate SHA-256 digest: 8974f47b23d74ecfee190b204d1e0f8b51e8d00107b029659800b8bbff2f45a8
+Signer #1 certificate SHA-1 digest: 08797b14a03138be63ba333781ab3ae814dbfa63
+Signer #1 certificate MD5 digest: c5120499a96c0c5b6406f10aac919a3e
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 3072
+Signer #1 public key SHA-256 digest: ff2e629a14bd3cdd91d2fca01bd184714db20437168137219079107e1d9c4f70
+Signer #1 public key SHA-1 digest: 778c38e2805ad76a097e0d6ef038b429c090ea60
+Signer #1 public key MD5 digest: b9faa35c6b84c75fbdf20cec063caef1
+
+package: kr.household.hanacollector
+uses-permission: name='android.permission.INTERNET'
+uses-permission: name='android.permission.ACCESS_NETWORK_STATE'
+
+N: android=http://schemas.android.com/apk/res/android (line=2)
+  E: manifest (line=2)
+    A: http://schemas.android.com/apk/res/android:versionCode(0x0101021b)=8
+    A: http://schemas.android.com/apk/res/android:versionName(0x0101021c)="0.8-kb-pilot" (Raw: "0.8-kb-pilot")
+    A: http://schemas.android.com/apk/res/android:compileSdkVersion(0x01010572)=36
+    A: http://schemas.android.com/apk/res/android:compileSdkVersionCodename(0x01010573)="16" (Raw: "16")
+    A: package="kr.household.hanacollector" (Raw: "kr.household.hanacollector")
+    A: platformBuildVersionCode=36
+    A: platformBuildVersionName=16
+      E: uses-sdk (line=3)
+        A: http://schemas.android.com/apk/res/android:minSdkVersion(0x0101020c)=31
+        A: http://schemas.android.com/apk/res/android:targetSdkVersion(0x01010270)=36
+      E: uses-permission (line=4)
+        A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.permission.INTERNET" (Raw: "android.permission.INTERNET")
+      E: uses-permission (line=5)
+        A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.permission.ACCESS_NETWORK_STATE" (Raw: "android.permission.ACCESS_NETWORK_STATE")
+      E: queries (line=6)
+          E: package (line=6)
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)="com.hanaskcard.paycla" (Raw: "com.hanaskcard.paycla")
+      E: application (line=7)
+        A: http://schemas.android.com/apk/res/android:theme(0x01010000)=@0x01030241
+        A: http://schemas.android.com/apk/res/android:label(0x01010001)="째미즈 asset" (Raw: "째미즈 asset")
+        A: http://schemas.android.com/apk/res/android:icon(0x01010002)=@0x7f030000
+        A: http://schemas.android.com/apk/res/android:debuggable(0x0101000f)=false
+        A: http://schemas.android.com/apk/res/android:allowBackup(0x01010280)=false
+        A: http://schemas.android.com/apk/res/android:supportsRtl(0x010103af)=true
+        A: http://schemas.android.com/apk/res/android:fullBackupContent(0x010104eb)=false
+        A: http://schemas.android.com/apk/res/android:usesCleartextTraffic(0x010104ec)=false
+        A: http://schemas.android.com/apk/res/android:roundIcon(0x0101052c)=@0x7f030000
+          E: activity (line=8)
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)=".MainActivity" (Raw: ".MainActivity")
+            A: http://schemas.android.com/apk/res/android:exported(0x01010010)=true
+              E: intent-filter (line=9)
+                  E: action (line=9)
+                    A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.intent.action.MAIN" (Raw: "android.intent.action.MAIN")
+                  E: category (line=9)
+                    A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.intent.category.LAUNCHER" (Raw: "android.intent.category.LAUNCHER")
+          E: service (line=11)
+            A: http://schemas.android.com/apk/res/android:label(0x01010001)="째미즈 asset · 카드 알림 확인" (Raw: "째미즈 asset · 카드 알림 확인")
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)=".HanaListener" (Raw: ".HanaListener")
+            A: http://schemas.android.com/apk/res/android:permission(0x01010006)="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" (Raw: "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE")
+            A: http://schemas.android.com/apk/res/android:exported(0x01010010)=false
+              E: intent-filter (line=12)
+                  E: action (line=12)
+                    A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.service.notification.NotificationListenerService" (Raw: "android.service.notification.NotificationListenerService")
+          E: service (line=14)
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)=".DiagnosticUploadJob" (Raw: ".DiagnosticUploadJob")
+            A: http://schemas.android.com/apk/res/android:permission(0x01010006)="android.permission.BIND_JOB_SERVICE" (Raw: "android.permission.BIND_JOB_SERVICE")
+            A: http://schemas.android.com/apk/res/android:exported(0x01010010)=true
+          E: activity (line=15)
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)=".KbActivity" (Raw: ".KbActivity")
+            A: http://schemas.android.com/apk/res/android:exported(0x01010010)=false
+          E: service (line=16)
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)=".KbCaptureUploadJob" (Raw: ".KbCaptureUploadJob")
+            A: http://schemas.android.com/apk/res/android:permission(0x01010006)="android.permission.BIND_JOB_SERVICE" (Raw: "android.permission.BIND_JOB_SERVICE")
+            A: http://schemas.android.com/apk/res/android:exported(0x01010010)=true
+          E: service (line=17)
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)=".CaptureUploadJob" (Raw: ".CaptureUploadJob")
+            A: http://schemas.android.com/apk/res/android:permission(0x01010006)="android.permission.BIND_JOB_SERVICE" (Raw: "android.permission.BIND_JOB_SERVICE")
+            A: http://schemas.android.com/apk/res/android:exported(0x01010010)=true
+
+package: name='kr.household.hanacollector' versionCode='8' versionName='0.8-kb-pilot' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+minSdkVersion:'31'
+targetSdkVersion:'36'
+uses-permission: name='android.permission.INTERNET'
+uses-permission: name='android.permission.ACCESS_NETWORK_STATE'
+application-label:'째미즈 asset'
+application-icon-160:'res/mipmap-anydpi-v26/ic_launcher.xml'
+application-icon-65534:'res/mipmap-anydpi-v26/ic_launcher.xml'
+application-icon-65535:'res/mipmap-anydpi-v26/ic_launcher.xml'
+application: label='째미즈 asset' icon='res/mipmap-anydpi-v26/ic_launcher.xml'
+launchable-activity: name='kr.household.hanacollector.MainActivity'  label='' icon=''
+feature-group: label=''
+  uses-feature: name='android.hardware.faketouch'
+  uses-implied-feature: name='android.hardware.faketouch' reason='default feature for all apps'
+provides-component:'notification-listener'
+main
+other-activities
+other-services
+supports-screens: 'small' 'normal' 'large' 'xlarge'
+supports-any-density: 'true'
+locales: '--_--'
+densities: '160' '65534' '65535'
+
+SHA256 394bd933297b3c39300dca8243af995e3d1ea15d9f00f8444470a7a0054939cb
