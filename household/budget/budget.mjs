@@ -1,8 +1,8 @@
-import {cardPanels} from './cards.mjs?v=kb1';
+import {cardPanels} from './cards.mjs?v=cards09';
 import {createClient} from '../account/supabase.mjs';
 import {createSessionStorage,endDeviceSession,SESSION_KEY} from '../account/session.mjs';
 import {currentKstMonth,shiftMonth} from '../connect/months.mjs';
-import {CATEGORIES,CARD_CATEGORIES,createBudgetState,budgetTotals} from './state.mjs?v=kb1';
+import {CATEGORIES,CARD_CATEGORIES,createBudgetState,budgetTotals} from './state.mjs?v=cards09';
 const $=s=>document.querySelector(s),won=n=>n===null?'—':new Intl.NumberFormat('ko-KR').format(n)+'원';
 const storage=createSessionStorage(()=>localStorage);
 const client=createClient('https://xcchskngoactqsiiutsp.supabase.co','sb_publishable_sONZt44kSnkbF8mjzoAgGQ_QOfmwm1v',{
@@ -25,7 +25,7 @@ function render(state){
  if($('#editor').open){$('#edit-error').textContent=state.message;return;}
  const box=$('#content');box.replaceChildren();if(state.phase!=='ready')return;
  const d=state.data,t=budgetTotals(d),known=d.net!==null;
- box.innerHTML=`<div class="budget-layout"><section class="budget-hero"><div class="hero-top"><h2>수집된 실제 사용액</h2><span class="badge">연결 카드 일부 수집</span></div><p class="amount">${won(t.used)}</p><p class="muted small">${known?'분류 전 금액도 포함된 합계예요.':'이 달에 수집된 자료가 아직 없어요.'}</p><div class="hero-metrics"><div><small>${d.planState==='saved'?'이 달의 예산':'임시 예산'}</small><strong>${won(t.planned)}</strong></div><div><small>수집분 기준 잔여</small><strong>${won(t.remaining)}</strong></div></div></section><section class="panel"><div class="section-top"><h2>항목별 예산</h2><button data-edit="plan" class="secondary">예산 조정</button></div>${CATEGORIES.map(([key,label])=>{
+ box.innerHTML=`<div class="budget-layout"><section class="budget-hero"><div class="hero-top"><h2>수집된 국내 일시불 사용액</h2><span class="badge">${d.month<'2026-11'?'10월 연결 시험':'연결 카드 일부 수집'}</span></div><p class="amount">${won(t.used)}</p><p class="muted small">${known?'분류 전 금액도 포함된 합계예요.':'이 달에 수집된 자료가 아직 없어요.'}</p><div class="hero-metrics"><div><small>${d.planState==='saved'?'이 달의 예산':'임시 예산'}</small><strong>${won(t.planned)}</strong></div><div><small>수집분 기준 잔여</small><strong>${won(t.remaining)}</strong></div></div></section><section class="panel"><div class="section-top"><h2>항목별 예산</h2><button data-edit="plan" class="secondary">예산 조정</button></div>${CATEGORIES.map(([key,label])=>{
   const used=d.used[key]??0,budget=d.budget?.[key]??null;const status=used>0?won(used):'—';
   return `<article class="budget-row ${budget!==null&&used>budget?'over':''}"><div class="budget-row-head"><h3>${label}</h3><strong>${status}<small> / ${budget===null?'예산 미설정':won(budget)}</small></strong></div><progress max="${budget>0?budget:Math.max(used,1)}" value="${used}" aria-label="${label} 분류된 사용액 ${won(used)}"></progress>${used===0?'<p class="row-note">분류된 실적 없음</p>':budget!==null&&used>budget?`<p class="row-note">${won(used-budget)} 초과</p>`:''}</article>`;
  }).join('')}</section><aside class="side-stack"><section class="panel"><p class="eyebrow">TO ORGANIZE</p><h2>${d.needsReview?'분류 재확인':'아직 나누지 않은 금액'}</h2><div class="unclassified">${won(d.unclassified)}</div><p>${d.needsReview?'수집 합계가 바뀌어 기존 분류를 다시 확인해야 해요.':'용돈·구독 등 목적별로 나누면 예산 막대에 반영돼요.'}</p></section>${cardPanels(d)}</aside></div>`;
@@ -35,7 +35,7 @@ function openEditor(kind,card='hana'){
  const d=model.state.data;if(!d||model.state.busy)return;editKind=kind;editCard=card;
  const allocation=d.ownAllocations?.find(x=>x.card===card)??(card==='hana'?d.ownAllocation:null);if(kind!=='plan'&&!allocation)return;
  const cats=kind==='plan'?CATEGORIES:CARD_CATEGORIES,values=kind==='plan'?d.budget:allocation?.amounts;
- $('#edit-title').textContent=kind==='plan'?'이번 달 예산 조정':card==='kb'?'내 KB카드 합계 나누기':'내 하나카드 합계 나누기';
+ $('#edit-title').textContent=kind==='plan'?'이번 달 예산 조정':`내 ${{hana:'하나',kb:'KB',nh:'NH',shinhan:'신한'}[card]??'카드'} 합계 나누기`;
  $('#edit-note').textContent=kind==='plan'?'이 달에만 적용돼요. 다른 기기에도 함께 저장됩니다.':`수집 합계 ${won(allocation.net)} 안에서 배분해 주세요. 나머지는 미분류로 남아요.`;
  $('#fields').innerHTML=cats.map(([key,label])=>`<label>${label}<input name="${key}" type="number" min="0" max="1000000000" step="1" inputmode="numeric" required value="${values?.[key]??0}"></label>`).join('');
  $('#edit-error').textContent='';updateEditTotal();$('#editor').showModal();
