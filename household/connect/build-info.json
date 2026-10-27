@@ -1,13 +1,13 @@
 {
   "appName": "째미즈 asset",
-  "version": "0.9-four-card-pilot",
-  "versionCode": 9,
-  "sha256": "5af06b51920f8568a27fa0ecd3df7d5570fa37ec34fdb60dbef714e438e7b7fd",
-  "bytes": 246340,
+  "version": "0.91",
+  "versionCode": 10,
+  "sha256": "16bffdecc86cd9a330b795e568cb3c2c7107ae0b08870f8a0451be6aeac231a2",
+  "bytes": 246339,
   "network": "fixed Supabase probe, content-free diagnostic, confirmed Hana, KB, NH and Shinhan domestic purchases; cumulative reference only",
   "diagnostics": "local latest 32 callbacks for 7 days; server latest status per device; bounded event-driven retries",
   "deviceTested": false,
-  "securityWarning": "Prior OS warning unresolved; no external scanner clearance claimed",
-  "upgrade": "Same package/signer; existing Hana/KB keys and queues retained; NH/Shinhan require separate opt-in",
+  "securityWarning": "Prior OS warning not adjudicated; no external scanner clearance claimed",
+  "upgrade": "Same package/signer; all existing card keys, consent and queues retained",
   "reproducibleDex": true
 }

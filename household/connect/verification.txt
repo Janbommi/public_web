@@ -22,8 +22,8 @@ uses-permission: name='android.permission.ACCESS_NETWORK_STATE'
 
 N: android=http://schemas.android.com/apk/res/android (line=2)
   E: manifest (line=2)
-    A: http://schemas.android.com/apk/res/android:versionCode(0x0101021b)=9
-    A: http://schemas.android.com/apk/res/android:versionName(0x0101021c)="0.9-four-card-pilot" (Raw: "0.9-four-card-pilot")
+    A: http://schemas.android.com/apk/res/android:versionCode(0x0101021b)=10
+    A: http://schemas.android.com/apk/res/android:versionName(0x0101021c)="0.91" (Raw: "0.91")
     A: http://schemas.android.com/apk/res/android:compileSdkVersion(0x01010572)=36
     A: http://schemas.android.com/apk/res/android:compileSdkVersionCodename(0x01010573)="16" (Raw: "16")
     A: package="kr.household.hanacollector" (Raw: "kr.household.hanacollector")
@@ -57,45 +57,48 @@ N: android=http://schemas.android.com/apk/res/android (line=2)
                     A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.intent.action.MAIN" (Raw: "android.intent.action.MAIN")
                   E: category (line=9)
                     A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.intent.category.LAUNCHER" (Raw: "android.intent.category.LAUNCHER")
-          E: service (line=11)
+          E: activity (line=11)
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)=".HanaActivity" (Raw: ".HanaActivity")
+            A: http://schemas.android.com/apk/res/android:exported(0x01010010)=false
+          E: service (line=12)
             A: http://schemas.android.com/apk/res/android:label(0x01010001)="째미즈 asset · 카드 알림 확인" (Raw: "째미즈 asset · 카드 알림 확인")
             A: http://schemas.android.com/apk/res/android:name(0x01010003)=".HanaListener" (Raw: ".HanaListener")
             A: http://schemas.android.com/apk/res/android:permission(0x01010006)="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" (Raw: "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE")
             A: http://schemas.android.com/apk/res/android:exported(0x01010010)=false
-              E: intent-filter (line=12)
-                  E: action (line=12)
+              E: intent-filter (line=13)
+                  E: action (line=13)
                     A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.service.notification.NotificationListenerService" (Raw: "android.service.notification.NotificationListenerService")
-          E: service (line=14)
+          E: service (line=15)
             A: http://schemas.android.com/apk/res/android:name(0x01010003)=".DiagnosticUploadJob" (Raw: ".DiagnosticUploadJob")
             A: http://schemas.android.com/apk/res/android:permission(0x01010006)="android.permission.BIND_JOB_SERVICE" (Raw: "android.permission.BIND_JOB_SERVICE")
             A: http://schemas.android.com/apk/res/android:exported(0x01010010)=true
-          E: activity (line=15)
+          E: activity (line=16)
             A: http://schemas.android.com/apk/res/android:name(0x01010003)=".KbActivity" (Raw: ".KbActivity")
             A: http://schemas.android.com/apk/res/android:exported(0x01010010)=false
-          E: service (line=16)
+          E: service (line=17)
             A: http://schemas.android.com/apk/res/android:name(0x01010003)=".KbCaptureUploadJob" (Raw: ".KbCaptureUploadJob")
             A: http://schemas.android.com/apk/res/android:permission(0x01010006)="android.permission.BIND_JOB_SERVICE" (Raw: "android.permission.BIND_JOB_SERVICE")
             A: http://schemas.android.com/apk/res/android:exported(0x01010010)=true
-          E: service (line=17)
+          E: service (line=18)
             A: http://schemas.android.com/apk/res/android:name(0x01010003)=".CaptureUploadJob" (Raw: ".CaptureUploadJob")
             A: http://schemas.android.com/apk/res/android:permission(0x01010006)="android.permission.BIND_JOB_SERVICE" (Raw: "android.permission.BIND_JOB_SERVICE")
             A: http://schemas.android.com/apk/res/android:exported(0x01010010)=true
-          E: activity (line=18)
+          E: activity (line=19)
             A: http://schemas.android.com/apk/res/android:name(0x01010003)=".NhActivity" (Raw: ".NhActivity")
             A: http://schemas.android.com/apk/res/android:exported(0x01010010)=false
-          E: service (line=19)
+          E: service (line=20)
             A: http://schemas.android.com/apk/res/android:name(0x01010003)=".NhCaptureUploadJob" (Raw: ".NhCaptureUploadJob")
             A: http://schemas.android.com/apk/res/android:permission(0x01010006)="android.permission.BIND_JOB_SERVICE" (Raw: "android.permission.BIND_JOB_SERVICE")
             A: http://schemas.android.com/apk/res/android:exported(0x01010010)=true
-          E: activity (line=20)
+          E: activity (line=21)
             A: http://schemas.android.com/apk/res/android:name(0x01010003)=".ShinhanActivity" (Raw: ".ShinhanActivity")
             A: http://schemas.android.com/apk/res/android:exported(0x01010010)=false
-          E: service (line=21)
+          E: service (line=22)
             A: http://schemas.android.com/apk/res/android:name(0x01010003)=".ShinhanCaptureUploadJob" (Raw: ".ShinhanCaptureUploadJob")
             A: http://schemas.android.com/apk/res/android:permission(0x01010006)="android.permission.BIND_JOB_SERVICE" (Raw: "android.permission.BIND_JOB_SERVICE")
             A: http://schemas.android.com/apk/res/android:exported(0x01010010)=true
 
-package: name='kr.household.hanacollector' versionCode='9' versionName='0.9-four-card-pilot' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+package: name='kr.household.hanacollector' versionCode='10' versionName='0.91' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
 minSdkVersion:'31'
 targetSdkVersion:'36'
 uses-permission: name='android.permission.INTERNET'
@@ -118,4 +121,4 @@ supports-any-density: 'true'
 locales: '--_--'
 densities: '160' '65534' '65535'
 
-SHA256 5af06b51920f8568a27fa0ecd3df7d5570fa37ec34fdb60dbef714e438e7b7fd
+SHA256 16bffdecc86cd9a330b795e568cb3c2c7107ae0b08870f8a0451be6aeac231a2
