@@ -18,7 +18,7 @@ export function connectionHealth(summary,owner=false,now=Date.now()){
   result.detail='진단 상태를 확인하지 못했습니다. 상태를 새로고침해 주세요.';return result;
  }
  const when=new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(received);
- const version=g.appVersion===4?'0.4':g.appVersion===5?'0.5':g.appVersion===6?'0.6':g.appVersion===7?'0.7':'버전 확인 필요';
+ const version=g.appVersion===4?'0.4':g.appVersion===5?'0.5':g.appVersion===6?'0.6':g.appVersion===7?'0.7':g.appVersion===8?'0.8':g.appVersion===9?'0.9':g.appVersion===10?'0.91':'버전 확인 필요';
  result.detail=`마지막 서버 진단 ${when} (한국 시간) · 앱 ${version} · 당시 알림 ${g.listenerConnected?'연결됨':'연결 끊김'}`;
  if(Number.isInteger(g.observations)&&g.observations>=0&&g.observations<=32&&Number.isInteger(g.parsedCount)&&g.parsedCount>=0&&g.parsedCount<=g.observations)
   result.detail+=` · 관측 ${g.observations}건 / 해석 ${g.parsedCount}건. 알림 갱신·이전 버전 기록을 포함할 수 있어 결제 건수가 아닙니다.`;
@@ -26,7 +26,7 @@ export function connectionHealth(summary,owner=false,now=Date.now()){
  if(now-received>86400000||received>now+300000){
   result.next='최근 상태를 확인하려면 앱을 한 번 열고 이 화면을 새로고침해 주세요. 진단이 오래됐다는 이유만으로 연결 끊김이나 결제 누락을 판단하지 않습니다.';
  }else if(g.appVersion<5){
-  result.next='설치된 앱은 진단용입니다. 이 페이지에서 0.7으로 업데이트한 뒤 한 번 열어 주세요.';
+  result.next='설치된 앱은 진단용입니다. 이 페이지에서 0.91로 업데이트한 뒤 한 번 열어 주세요.';
  }else if(!g.listenerConnected){
   result.next='마지막 진단에서 알림 연결이 끊겨 있었습니다. 앱에서 알림 접근 허용을 확인하고 다시 열어 주세요.';
  }
