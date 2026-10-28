@@ -1,13 +1,13 @@
 {
   "appName": "째미즈 asset",
-  "version": "0.95",
-  "versionCode": 14,
-  "sha256": "a9635918e62361761b262dedd9f9841515fe3edef8aa6e1373f3a0ccc4d4eb1e",
-  "bytes": 267033,
+  "version": "1.0",
+  "versionCode": 15,
+  "sha256": "b057a426d4481ddee479f0c072e9b2a72d64502bf934d6062d7fe64006b9bc92",
+  "bytes": 275224,
   "distribution": "public",
   "containsPrivateFamilyPhotos": false,
-  "network": "fixed authenticated enrollment, invitation approval and monthly collection; no new individual purchase rows",
-  "diagnostics": "encrypted local queue; bounded content-free local diagnostics and retries",
+  "network": "fixed authenticated enrollment, invitation approval and monthly collection; no merchant or notification body; no new individual purchase rows",
+  "diagnostics": "encrypted local queue; local latest 32 content-free callbacks for 7 days; bounded retries",
   "deviceTested": false,
   "androidRuntimeTested": true,
   "runtimeApis": [
@@ -15,6 +15,6 @@
     36
   ],
   "testEnvironment": "Emulators with synthetic data; physical OEM power-management behavior not certified",
-  "upgrade": "Same package/signature; four encrypted keys and exact queued synthetic events preserved from 0.94",
+  "upgrade": "Same package/signature; four encrypted keys and exact queued synthetic events preserved from 0.95",
   "independentQa": "pass"
 }

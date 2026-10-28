@@ -22,8 +22,8 @@ uses-permission: name='android.permission.ACCESS_NETWORK_STATE'
 
 N: android=http://schemas.android.com/apk/res/android (line=2)
   E: manifest (line=2)
-    A: http://schemas.android.com/apk/res/android:versionCode(0x0101021b)=14
-    A: http://schemas.android.com/apk/res/android:versionName(0x0101021c)="0.95" (Raw: "0.95")
+    A: http://schemas.android.com/apk/res/android:versionCode(0x0101021b)=15
+    A: http://schemas.android.com/apk/res/android:versionName(0x0101021c)="1.0" (Raw: "1.0")
     A: http://schemas.android.com/apk/res/android:compileSdkVersion(0x01010572)=36
     A: http://schemas.android.com/apk/res/android:compileSdkVersionCodename(0x01010573)="16" (Raw: "16")
     A: package="kr.household.hanacollector" (Raw: "kr.household.hanacollector")
@@ -60,61 +60,64 @@ N: android=http://schemas.android.com/apk/res/android (line=2)
                   E: category (line=9)
                     A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.intent.category.LAUNCHER" (Raw: "android.intent.category.LAUNCHER")
           E: activity (line=11)
-            A: http://schemas.android.com/apk/res/android:name(0x01010003)=".HanaActivity" (Raw: ".HanaActivity")
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)=".CorrectionActivity" (Raw: ".CorrectionActivity")
             A: http://schemas.android.com/apk/res/android:exported(0x01010010)=false
           E: activity (line=12)
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)=".HanaActivity" (Raw: ".HanaActivity")
+            A: http://schemas.android.com/apk/res/android:exported(0x01010010)=false
+          E: activity (line=13)
             A: http://schemas.android.com/apk/res/android:name(0x01010003)=".EnrollmentActivity" (Raw: ".EnrollmentActivity")
             A: http://schemas.android.com/apk/res/android:exported(0x01010010)=true
             A: http://schemas.android.com/apk/res/android:launchMode(0x0101001d)=1
-              E: intent-filter (line=13)
-                  E: action (line=14)
+              E: intent-filter (line=14)
+                  E: action (line=15)
                     A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.intent.action.VIEW" (Raw: "android.intent.action.VIEW")
-                  E: category (line=15)
-                    A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.intent.category.DEFAULT" (Raw: "android.intent.category.DEFAULT")
                   E: category (line=16)
+                    A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.intent.category.DEFAULT" (Raw: "android.intent.category.DEFAULT")
+                  E: category (line=17)
                     A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.intent.category.BROWSABLE" (Raw: "android.intent.category.BROWSABLE")
-                  E: data (line=17)
+                  E: data (line=18)
                     A: http://schemas.android.com/apk/res/android:scheme(0x01010027)="jjaemizasset" (Raw: "jjaemizasset")
                     A: http://schemas.android.com/apk/res/android:host(0x01010028)="join" (Raw: "join")
-          E: service (line=20)
+          E: service (line=21)
             A: http://schemas.android.com/apk/res/android:label(0x01010001)="째미즈 asset · 카드 알림 확인" (Raw: "째미즈 asset · 카드 알림 확인")
             A: http://schemas.android.com/apk/res/android:name(0x01010003)=".HanaListener" (Raw: ".HanaListener")
             A: http://schemas.android.com/apk/res/android:permission(0x01010006)="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" (Raw: "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE")
             A: http://schemas.android.com/apk/res/android:exported(0x01010010)=false
-              E: intent-filter (line=21)
-                  E: action (line=21)
+              E: intent-filter (line=22)
+                  E: action (line=22)
                     A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.service.notification.NotificationListenerService" (Raw: "android.service.notification.NotificationListenerService")
-          E: service (line=23)
+          E: service (line=24)
             A: http://schemas.android.com/apk/res/android:name(0x01010003)=".DiagnosticUploadJob" (Raw: ".DiagnosticUploadJob")
             A: http://schemas.android.com/apk/res/android:permission(0x01010006)="android.permission.BIND_JOB_SERVICE" (Raw: "android.permission.BIND_JOB_SERVICE")
             A: http://schemas.android.com/apk/res/android:exported(0x01010010)=true
-          E: activity (line=24)
+          E: activity (line=25)
             A: http://schemas.android.com/apk/res/android:name(0x01010003)=".KbActivity" (Raw: ".KbActivity")
             A: http://schemas.android.com/apk/res/android:exported(0x01010010)=false
-          E: service (line=25)
+          E: service (line=26)
             A: http://schemas.android.com/apk/res/android:name(0x01010003)=".KbCaptureUploadJob" (Raw: ".KbCaptureUploadJob")
             A: http://schemas.android.com/apk/res/android:permission(0x01010006)="android.permission.BIND_JOB_SERVICE" (Raw: "android.permission.BIND_JOB_SERVICE")
             A: http://schemas.android.com/apk/res/android:exported(0x01010010)=true
-          E: service (line=26)
+          E: service (line=27)
             A: http://schemas.android.com/apk/res/android:name(0x01010003)=".CaptureUploadJob" (Raw: ".CaptureUploadJob")
             A: http://schemas.android.com/apk/res/android:permission(0x01010006)="android.permission.BIND_JOB_SERVICE" (Raw: "android.permission.BIND_JOB_SERVICE")
             A: http://schemas.android.com/apk/res/android:exported(0x01010010)=true
-          E: activity (line=27)
+          E: activity (line=28)
             A: http://schemas.android.com/apk/res/android:name(0x01010003)=".NhActivity" (Raw: ".NhActivity")
             A: http://schemas.android.com/apk/res/android:exported(0x01010010)=false
-          E: service (line=28)
+          E: service (line=29)
             A: http://schemas.android.com/apk/res/android:name(0x01010003)=".NhCaptureUploadJob" (Raw: ".NhCaptureUploadJob")
             A: http://schemas.android.com/apk/res/android:permission(0x01010006)="android.permission.BIND_JOB_SERVICE" (Raw: "android.permission.BIND_JOB_SERVICE")
             A: http://schemas.android.com/apk/res/android:exported(0x01010010)=true
-          E: activity (line=29)
+          E: activity (line=30)
             A: http://schemas.android.com/apk/res/android:name(0x01010003)=".ShinhanActivity" (Raw: ".ShinhanActivity")
             A: http://schemas.android.com/apk/res/android:exported(0x01010010)=false
-          E: service (line=30)
+          E: service (line=31)
             A: http://schemas.android.com/apk/res/android:name(0x01010003)=".ShinhanCaptureUploadJob" (Raw: ".ShinhanCaptureUploadJob")
             A: http://schemas.android.com/apk/res/android:permission(0x01010006)="android.permission.BIND_JOB_SERVICE" (Raw: "android.permission.BIND_JOB_SERVICE")
             A: http://schemas.android.com/apk/res/android:exported(0x01010010)=true
 
-package: name='kr.household.hanacollector' versionCode='14' versionName='0.95' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+package: name='kr.household.hanacollector' versionCode='15' versionName='1.0' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
 minSdkVersion:'31'
 targetSdkVersion:'36'
 uses-permission: name='android.permission.INTERNET'
@@ -137,4 +140,4 @@ supports-any-density: 'true'
 locales: '--_--'
 densities: '160' '65534' '65535'
 
-SHA256 a9635918e62361761b262dedd9f9841515fe3edef8aa6e1373f3a0ccc4d4eb1e
+SHA256 b057a426d4481ddee479f0c072e9b2a72d64502bf934d6062d7fe64006b9bc92
