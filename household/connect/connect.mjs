@@ -1,5 +1,5 @@
 import {hanaSummaryText,hanaSummaryDisplay} from './summary.mjs?v=design07';
-import {connectionHealth} from './health.mjs?v=0.91';
+import {connectionHealth} from './health.mjs?v=0.92';
 import {currentKstMonth,shiftMonth} from './months.mjs?v=health1';
 import {createClient} from '../account/supabase.mjs';
 import {createSessionStorage,endDeviceSession,SESSION_KEY} from '../account/session.mjs';
