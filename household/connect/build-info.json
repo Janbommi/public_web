@@ -1,15 +1,20 @@
 {
   "appName": "째미즈 asset",
-  "version": "0.93",
-  "versionCode": 12,
-  "sha256": "a130e7f7752e22acb888185e65918f44a77d91e254ac0c9a044a0463f36372f0",
-  "bytes": 254746,
+  "version": "0.94",
+  "versionCode": 13,
+  "sha256": "1b2d8ea94d747849b0825dee92cb6200523eb96c042ae092800054f94b601f47",
+  "bytes": 258840,
   "distribution": "public",
   "containsPrivateFamilyPhotos": false,
   "network": "fixed Supabase probe, content-free diagnostic, confirmed Hana, KB, NH and Shinhan domestic purchases; cumulative reference only",
   "diagnostics": "local latest 32 callbacks for 7 days; server latest status per device; bounded event-driven retries",
   "deviceTested": false,
-  "upgrade": "Same package and signer; existing card keys and queues retained",
-  "reproducibleDex": true,
-  "privatePhotos": "Authenticated native fetch; encrypted device cache up to 24 hours; no photos bundled"
+  "androidRuntimeTested": true,
+  "runtimeApis": [
+    31,
+    36
+  ],
+  "testEnvironment": "Emulators with synthetic data; physical OEM power-management behavior not certified",
+  "upgrade": "Same package/signature; four encrypted keys and exact queued synthetic events preserved from 0.93",
+  "independentQa": "pass"
 }
