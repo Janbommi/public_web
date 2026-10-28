@@ -1,8 +1,8 @@
 {
   "appName": "째미즈 asset",
-  "version": "0.92",
-  "versionCode": 11,
-  "sha256": "05ba528eb16924425b23eac24bb15f3684733ff3dbafdaa55d827427ea90f074",
+  "version": "0.93",
+  "versionCode": 12,
+  "sha256": "a130e7f7752e22acb888185e65918f44a77d91e254ac0c9a044a0463f36372f0",
   "bytes": 254746,
   "distribution": "public",
   "containsPrivateFamilyPhotos": false,
