@@ -1,5 +1,5 @@
-import {createClient} from '../account/supabase.mjs';
-import {createSessionStorage,SESSION_KEY} from '../account/session.mjs';
+import {createClient} from '../account/client.mjs?v=web12';
+import {createSessionStorage,SESSION_KEY} from '../account/session.mjs?v=web12';
 import {currentKstMonth} from '../connect/months.mjs';
 const $=x=>document.querySelector(x),storage=createSessionStorage(()=>localStorage);
 const client=createClient('https://xcchskngoactqsiiutsp.supabase.co','sb_publishable_sONZt44kSnkbF8mjzoAgGQ_QOfmwm1v',{auth:{persistSession:true,storage,storageKey:SESSION_KEY,autoRefreshToken:true,detectSessionInUrl:false},global:{fetch:(url,opts={})=>fetch(url,{...opts,cache:'no-store',signal:AbortSignal.timeout(15000)})}});

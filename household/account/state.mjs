@@ -1,23 +1,25 @@
 export function createAssetState(rpc,notify=()=>{}) {
   let generation=0, pending;
-  let state={phase:'signed-out',assets:[],context:null,message:''};
+  let state={phase:'signed-out',assets:[],context:null,message:'',failed:false,updatedAt:null};
   const emit=next=>{state=next;notify(state);};
-  function clear(message='') {generation++;pending?.abort();emit({phase:'signed-out',assets:[],context:null,message});}
+  function clear(message='') {generation++;pending?.abort();emit({phase:'signed-out',assets:[],context:null,message,failed:false,updatedAt:null});}
   async function load() {
     const current=++generation;pending?.abort();pending=new AbortController();
     const signal=AbortSignal.any([pending.signal,AbortSignal.timeout(15000)]);
-    emit({phase:'loading',assets:[],context:null,message:'공유 잔액을 확인하고 있어요.'});
+    // A refresh keeps the last balances on screen; only a first load shows the loading state.
+    const previous=state.phase==='ready'?state:null;
+    if(!previous)emit({phase:'loading',assets:[],context:null,message:'공유 잔액을 확인하고 있어요.',failed:false,updatedAt:null});
     try {
       const context=await rpc('household_context',{},signal);
       const assets=await rpc('household_assets',{},signal);
       if(current!==generation)return;
       if(!context?.householdId || !Array.isArray(assets))throw Error('Invalid response');
-      emit({phase:'ready',context,assets,message:''});
+      emit({phase:'ready',context,assets,message:'',failed:false,updatedAt:Date.now()});
     } catch(error) {
       if(current!==generation)return;
-      emit({phase:error.code==='42501'?'unregistered':'error',assets:[],context:null,
-        message:error.code==='42501'?'로그인은 됐지만 아직 우리 가계에 등록되지 않은 계정이에요.':
-          '공유 잔액을 확인하지 못했어요. 연결 상태를 확인한 후 다시 불러오거나 로그인해 주세요.'});
+      if(error.status===401){clear('로그인이 끝났어요. 다시 로그인해 주세요.');return;}
+      if(previous&&error.code!=='42501'){emit({...previous,failed:true});return;}
+      emit({phase:error.code==='42501'?'unregistered':'error',assets:[],context:null,message:'',failed:false,updatedAt:null});
     }
   }
   async function save(id,version,values) {
