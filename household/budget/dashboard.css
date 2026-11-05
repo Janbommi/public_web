@@ -162,8 +162,8 @@
 #dashboard .j-confirm{padding:15px;border:1px solid #ddcbb8;border-radius:14px;background:#fff2e3;font-size:12px;line-height:1.8;margin:0 0 16px}
 #dashboard .j-confirm p{margin:0 0 11px}
 #dashboard .j-confirm-actions{display:flex;gap:8px}
-#dashboard .j-confirm-actions button{flex:1;min-height:44px;border:1px solid #d8cbbd;border-radius:10px;background:white;font-size:12px}
-#dashboard .j-confirm-actions button:first-child{background:var(--j-mint);color:var(--j-green);border-color:#c6dccb}
+#dashboard .j-confirm-actions button,#dashboard .j-confirm>button{flex:1;min-height:44px;border:1px solid #d8cbbd;border-radius:10px;background:white;font-size:12px}
+#dashboard .j-confirm-actions button:first-child,#dashboard .j-confirm>button{background:var(--j-mint);color:var(--j-green);border-color:#c6dccb}
 @media(max-width:350px){#dashboard .j-plan-row{grid-template-columns:1fr;gap:8px}#dashboard .j-plan-row>.j-money-field{margin-left:38px}#dashboard .j-allocation-row{grid-template-columns:1fr;gap:6px}#dashboard .j-allocation-row>.j-money-field{margin-left:16px}#dashboard .j-plan-card{padding:14px}#dashboard .j-setting-title h1{font-size:23px}#dashboard .j-month-chip{padding:5px 7px}#dashboard .j-disclosure>summary{align-items:flex-start;padding:10px 0;gap:6px}#dashboard .j-disclosure>summary .j-balance{font-size:11px}#dashboard .j-add-chooser{grid-template-columns:1fr}#dashboard .j-plan-footer{padding:17px}}
 
 
@@ -190,3 +190,14 @@ html,body{margin:0;background:#fff9f0;color:#3e3a35;color-scheme:light;font-fami
 .login-panel form>label{display:block;margin:18px 0 8px;font-size:14px}.login-panel input:not([type=checkbox]){display:block;width:100%;box-sizing:border-box;min-height:50px;border:1px solid #ddd6cb;border-radius:12px;background:white;padding:12px;font-size:16px}.login-panel button{min-height:48px;width:100%;border:0;border-radius:12px;background:#386c5a;color:white;font:inherit}.login-panel .check{display:flex;gap:8px;align-items:center}.notice-card{font-size:13px;line-height:1.8;background:#fff0dd;padding:14px;border-radius:12px}.notice-card h2{font-size:16px}#login-error{color:#943e35;font-size:13px}#restoring{text-align:center;margin-top:80px;font-size:14px}
 @media(min-width:600px){#dashboard .j-app{margin:22px auto;border:1px solid #eee7dc;border-radius:28px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+
+/* Direct card plans and collector renewal use the same mobile surfaces. */
+#dashboard .j-plan-label small{display:block;font-size:11px;font-weight:400;line-height:1.6;color:var(--j-sub);margin-top:5px}
+#dashboard .j-connection-card{background:#fff;padding:20px;border:1px solid var(--j-line);border-radius:20px;margin:14px 0}
+#dashboard .j-connection-card h2{font-size:16px;margin:0 0 9px}
+#dashboard .j-connection-card .j-primary{width:100%;margin-top:8px}
+#dashboard .j-overview-meta strong{white-space:nowrap}
+#dashboard .j-direct-label{display:block;overflow-wrap:anywhere}
+#dashboard .j-plan-footer dd{font-size:clamp(16px,5vw,20px);white-space:nowrap}
+@media(max-width:350px){#dashboard .j-direct-plan .j-money-field{margin-left:0}}

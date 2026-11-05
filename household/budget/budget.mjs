@@ -1,4 +1,4 @@
-import {cardPanels,connectedCount,short} from './cards.mjs?v=web12';
+import {cardPanels,connectedCount,short} from './cards.mjs?v=web15';
 import {createClient} from '../account/client.mjs?v=web12';
 import {signInWithUsername} from '../account/username.mjs?v=web12';
 import {createSessionStorage,endDeviceSession,logoutMessage,SESSION_KEY} from '../account/session.mjs?v=web12';
@@ -196,3 +196,4 @@ try{
 }catch{unavailable(unstable());}
 setInterval(()=>{if(authenticated&&!document.hidden&&!$('#editor').open&&model.state.phase==='ready')load(undefined,{quiet:true});},30000);
 addEventListener('visibilitychange',()=>{if(!document.hidden&&authenticated&&!$('#editor').open&&model.state.phase==='ready')load(undefined,{quiet:true});});
+

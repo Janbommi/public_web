@@ -1,6 +1,6 @@
-const names={hana:'하나 MOVING ONLINE',kb:'KB 쿠팡 와우',nh:'NH zgm 할인',shinhan:'신한 K-패스',shinhan_bab:'신한 밥친구',shinhan_line:'네이버페이 라인프렌즈 신한카드',samsung:'삼성 회사카드'};
-export const short={hana:'하나',kb:'KB',nh:'NH',shinhan:'신한',shinhan_bab:'밥친구',shinhan_line:'라인프렌즈',samsung:'삼성'};
-const MY=['hana','kb','nh','shinhan'],SPOUSE=['shinhan_bab','shinhan_line','samsung'];
+const names={hana:'하나 MOVING ONLINE',kb:'KB 쿠팡 와우',nh:'NH zgm 할인',shinhan:'신한 K-패스',shinhan_bab:'신한 밥친구',samsung:'삼성 회사카드'};
+export const short={hana:'하나',kb:'KB',nh:'NH',shinhan:'신한',shinhan_bab:'밥친구',samsung:'삼성'};
+const MY=['hana','kb','nh','shinhan'],SPOUSE=['shinhan_bab','samsung'];
 const states={'not-paired':'연결 전','revoked':'연결 해제됨','expired':'연결 만료','profile-pending':'카드 확인 대기'};
 const won=n=>Number.isSafeInteger(n)&&n>=0?new Intl.NumberFormat('ko-KR').format(n)+'원':'—';
 const at=s=>{const d=new Date(s);return Number.isFinite(d.getTime())?new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(d):'시각 확인 필요';};
@@ -9,7 +9,7 @@ function stateText(c){
  if(c.state==='pilot')return c.net==null?'이 달 자료 없음':'일부 수집';
  return states[c.state]??'상태 확인 필요';
 }
-export function connectedCount(data){return (data.cards??[]).filter(c=>c.state==='pilot').length;}
+export function connectedCount(data){return (data.cards??[]).filter(c=>[...MY,...SPOUSE].includes(c.card)&&c.state==='pilot').length;}
 export function orderedCards(data,slot='me'){
  const known=new Map((data.cards??[{card:'hana',state:'pilot',net:data.net,cumulative:null}]).map(c=>[c.card,c]));
  const row=key=>known.get(key)??{card:key,state:'not-paired',net:null,cumulative:null};
@@ -35,3 +35,4 @@ export function cardPanels(data,slot='me'){
  }).join('');
  return `<section class="panel" aria-labelledby="cards-title"><h2 id="cards-title">카드 현황</h2><div class="card-list">${rows}</div><p class="tracking-note">연결 전 카드는 합계에 들어가지 않아요. 0원이라는 뜻이 아니에요.</p></section>`;
 }
+
