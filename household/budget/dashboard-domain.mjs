@@ -4,7 +4,8 @@ export const CARDS=[
  {id:'kb',owner:'me',name:'KB 쿠팡 와우',purpose:'쿠팡 · 쿠팡이츠',icon:'bag'},
  {id:'shinhan',owner:'me',name:'신한 K-패스',purpose:'대중교통 · 주유 · 택시',icon:'bus'},
  {id:'shinhan_bab',owner:'partner',name:'신한 밥친구',purpose:'배민 장보기 · 배달음식',icon:'food'},
- {id:'samsung',owner:'partner',name:'삼성 회사카드',purpose:'개인 소비',icon:'heart'}
+ {id:'samsung',owner:'partner',name:'삼성 회사카드',purpose:'개인 소비',icon:'heart'},
+ {id:'samsung_happiness',owner:'partner',name:'삼성 국민행복카드',purpose:'출산·육아',icon:'heart'}
 ];
 export const CATEGORIES=[
  {key:'grocery',name:'마트·생활',icon:'bag',group:'함께 쓰는 생활비'},
@@ -77,3 +78,4 @@ export function planSaveRequest(draft){
  return hasCardPlan(plan)?{name:'household_save_card_budget_plan',args:{p_month:plan.month,p_expected_version:plan.cardBudgetVersion,p_card_budgets:plan.cardBudgets,p_common_budgets:plan.commonBudgets}}:{name:'household_save_budget_plan',args:{p_month:plan.month,p_expected_version:plan.version,p_budgets:plan.budgets,p_allocations:plan.allocations}};
 }
 export const classifiableRows=(data,slot)=>(data.ownAllocations??[]).filter(a=>a.net!==null&&CARDS.some(c=>c.id===a.card&&c.owner===slot));
+

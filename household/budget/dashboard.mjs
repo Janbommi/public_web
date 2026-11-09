@@ -3,8 +3,8 @@ import {signInWithUsername} from '../account/username.mjs?v=web12';
 import {createSessionStorage,endDeviceSession,logoutMessage,SESSION_KEY} from '../account/session.mjs?v=web12';
 import {browserContext} from '../shared/page.mjs?v=web12';
 import {shiftMonth} from '../connect/months.mjs';
-import {CARDS,CATEGORIES,clone,number,won,totals,validatePlan,label,escape,todayKst,validCash,hasCardPlan,importPreviousPlan,planSaveRequest,classifiableRows} from './dashboard-domain.mjs?v=web15';
-import * as views from './dashboard-views.mjs?v=web15';
+import {CARDS,CATEGORIES,clone,number,won,totals,validatePlan,label,escape,todayKst,validCash,hasCardPlan,importPreviousPlan,planSaveRequest,classifiableRows} from './dashboard-domain.mjs?v=web16';
+import * as views from './dashboard-views.mjs?v=web16';
 const BASE='https://xcchskngoactqsiiutsp.supabase.co',ENDPOINT=BASE+'/functions/v1/household-login';
 const $=s=>document.querySelector(s),root=$('#dashboard'),main=$('#content');
 let persistenceUnavailable=false;
@@ -117,4 +117,5 @@ addEventListener('pageshow',event=>{if(event.persisted)location.reload();});
 setInterval(()=>{if(authenticated&&!document.hidden)load(s.month,{quiet:true});},30000);
 addEventListener('visibilitychange',()=>{if(!document.hidden&&authenticated)load(s.month,{quiet:true});});
 show('restoring');try{const {data,error}=await client.auth.getSession();if(data?.session)await enter();else if(error&&error.status!==401){show('login');note('접속 상태를 확인하지 못했어요. 잠시 뒤 새로고침해 주세요.');}else show('login');}catch{show('login');note('연결을 확인하지 못했어요. 잠시 뒤 새로고침해 주세요.');}
+
 
