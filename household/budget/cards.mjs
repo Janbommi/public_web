@@ -1,6 +1,6 @@
-const names={hana:'하나 MOVING ONLINE',kb:'KB 쿠팡 와우',nh:'NH zgm 할인',shinhan:'신한 K-패스',shinhan_bab:'신한 밥친구',samsung:'삼성 회사카드',samsung_happiness:'삼성 국민행복카드'};
-export const short={hana:'하나',kb:'KB',nh:'NH',shinhan:'신한',shinhan_bab:'밥친구',samsung:'삼성',samsung_happiness:'국민행복'};
-const MY=['hana','kb','nh','shinhan'],SPOUSE=['shinhan_bab','samsung','samsung_happiness'];
+const names={hana:'하나 MOVING ONLINE',kb:'KB 쿠팡 와우',nh:'NH zgm 할인',shinhan:'신한 K-패스',shinhan_bab:'신한 밥친구',samsung:'삼성 회사카드',samsung_happiness:'삼성 국민행복카드',shinhan_line:'네이버페이 라인프렌즈 신한카드'};
+export const short={hana:'하나',kb:'KB',nh:'NH',shinhan:'신한',shinhan_bab:'밥친구',samsung:'삼성',samsung_happiness:'국민행복',shinhan_line:'라인프렌즈'};
+const MY=['hana','kb','nh','shinhan'],SPOUSE=['shinhan_bab','samsung','samsung_happiness','shinhan_line'];
 const states={'not-paired':'연결 전','revoked':'연결 해제됨','expired':'연결 만료','profile-pending':'카드 확인 대기'};
 const won=n=>Number.isSafeInteger(n)&&n>=0?new Intl.NumberFormat('ko-KR').format(n)+'원':'—';
 const at=s=>{const d=new Date(s);return Number.isFinite(d.getTime())?new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(d):'시각 확인 필요';};
@@ -14,7 +14,8 @@ export function orderedCards(data,slot='me'){
  const known=new Map((data.cards??[{card:'hana',state:'pilot',net:data.net,cumulative:null}]).map(c=>[c.card,c]));
  const row=key=>known.get(key)??{card:key,state:'not-paired',net:null,cumulative:null};
  const mine=slot==='partner'?SPOUSE:MY,theirs=slot==='partner'?MY:SPOUSE;
- return [...mine.map(k=>({...row(k),own:true})),...theirs.map(k=>({...row(k),own:false}))];
+ const visible=keys=>keys.filter(k=>k!=='shinhan_line'||known.has(k));
+ return [...visible(mine).map(k=>({...row(k),own:true})),...visible(theirs).map(k=>({...row(k),own:false}))];
 }
 function details(c,data,slot){
  const a=c.own?data.ownAllocations?.find(x=>x.card===c.card)??(c.card==='hana'?data.ownAllocation:null):null,o=c.cumulative;
@@ -35,5 +36,6 @@ export function cardPanels(data,slot='me'){
  }).join('');
  return `<section class="panel" aria-labelledby="cards-title"><h2 id="cards-title">카드 현황</h2><div class="card-list">${rows}</div><p class="tracking-note">연결 전 카드는 합계에 들어가지 않아요. 0원이라는 뜻이 아니에요.</p></section>`;
 }
+
 
 
