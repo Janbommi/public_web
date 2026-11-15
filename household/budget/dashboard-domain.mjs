@@ -81,4 +81,16 @@ export function planSaveRequest(draft){
 }
 export const classifiableRows=(data,slot)=>(data.ownAllocations??[]).filter(a=>a.net!==null&&CARDS.some(c=>c.id===a.card&&c.owner===slot));
 
+// The server owns this capability. Card-list selection never replaces login identity.
+export function dashboardIdentity(context){
+ if(!context||!['me','partner'].includes(context.memberSlot))throw new Error('invalid-household-context');
+ return {slot:context.memberSlot,canViewPartnerCards:context.householdRole==='admin'&&context.canViewPartnerCards===true};
+}
+export const cardListOwner=s=>s.canViewPartnerCards===true&&s.cardScope==='partner'?(s.slot==='me'?'partner':'me'):s.slot;
+export function cardBudgetSummary(plan,slot){
+ const rows=activeCards(plan).filter(c=>!slot||c.owner===slot);
+ return {budget:slot?ownerLimit(plan,slot):totals(plan).sum,
+  incomplete:hasCardPlan(plan)&&rows.some(c=>limit(plan,c.id)===null)};
+}
+
 

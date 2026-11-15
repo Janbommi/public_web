@@ -201,3 +201,30 @@ html,body{margin:0;background:#fff9f0;color:#3e3a35;color-scheme:light;font-fami
 #dashboard .j-direct-label{display:block;overflow-wrap:anywhere}
 #dashboard .j-plan-footer dd{font-size:clamp(16px,5vw,20px);white-space:nowrap}
 @media(max-width:350px){#dashboard .j-direct-plan .j-money-field{margin-left:0}}
+
+/* Remaining budget is a reserve, not a completion target. */
+#dashboard .j-budget-top{flex-wrap:wrap;align-items:baseline}
+#dashboard .j-budget-top strong,#dashboard .j-personal .j-budget-top strong,#dashboard .j-card .j-budget-top strong{font-size:20px;overflow-wrap:anywhere}
+#dashboard .j-reserve .j-track{height:12px;border-radius:4px;background:transparent}
+#dashboard .j-spent,#dashboard .j-spent-swatch{background:repeating-linear-gradient(135deg,#b9b6af 0 2px,#eeece6 2px 6px)}
+#dashboard .j-spent,#dashboard .j-remaining{height:100%;flex-shrink:0;border-radius:0}
+#dashboard .j-remaining,#dashboard .j-remaining-swatch{background:#71aa90}
+#dashboard .j-spent:not([style="width:0%"]) + .j-remaining:not([style="width:0%"]) {border-left:2px solid #fff}
+#dashboard .j-budget-legend{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px 12px;font-size:11px;line-height:1.7;color:#59544d}
+#dashboard .j-budget-legend span{display:flex;align-items:center;gap:5px}
+#dashboard .j-budget-legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+#dashboard .j-keep-budget{font-size:12px;color:#315c4c;line-height:1.7;margin:7px 0 0}
+#dashboard .j-budget-caution{font-size:12px;color:#79520b;background:#fff1ce;border-radius:6px;padding:6px 8px;line-height:1.7;margin:8px 0 0}
+#dashboard .j-over-budget{border:1px solid #d92d20;border-radius:12px;background:#fff1f0;padding:12px!important}
+#dashboard .j-hero .j-over-budget{border-top:1px solid #d92d20}
+#dashboard .j-over-budget .j-budget-top strong,#dashboard .j-over-budget .j-risk{color:#b42318}
+#dashboard .j-over-budget .j-over-badge{background:#b42318;color:#fff;border-radius:5px;padding:3px 6px;font-size:12px;font-weight:700}
+#dashboard .j-over-track{height:12px;width:100%;background:#d92d20;border-radius:4px;margin-top:10px}
+#dashboard .j-over-budget .j-budget-note{color:#77453e}
+#dashboard .j-budget-unset{font-size:13px;line-height:1.7}
+#dashboard .j-card-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;background:#edece4;border-radius:13px;margin-bottom:14px}
+#dashboard .j-card-tabs button{min-height:44px;border:0;border-radius:9px;background:transparent;font-size:14px;color:#59544d}
+#dashboard .j-card-tabs button[aria-selected="true"]{background:var(--j-mint);color:#264e3f;font-weight:750;text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:2px}
+@media(max-width:350px){#dashboard .j-card-amount,#dashboard .j-personal-top,#dashboard .j-cash-head{flex-wrap:wrap}#dashboard .j-budget-top strong,#dashboard .j-personal .j-budget-top strong,#dashboard .j-card .j-budget-top strong{font-size:18px}}
+
+#dashboard .j-budget-note{word-break:keep-all;overflow-wrap:anywhere}
