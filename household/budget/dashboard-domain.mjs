@@ -57,7 +57,17 @@ export function validatePlan(plan){const errors={};let grand=0;if(hasCardPlan(pl
 export function cleanPlan(draft){const plan=clone(draft);if(hasCardPlan(plan)){plan.cardBudgets=Object.fromEntries(CARDS.map(c=>[c.id,number(plan.cardBudgets[c.id]??null)]));plan.commonBudgets=Object.fromEntries(COMMON.map(c=>[c.key,number(plan.commonBudgets?.[c.key]??null)]));return plan;}for(const k of Object.keys(plan.budgets))plan.budgets[k]=number(plan.budgets[k]);for(const [c,a] of Object.entries(plan.allocations)){for(const [k,v] of Object.entries(a)){const n=number(v);if(n===null)delete a[k];else a[k]=n;}if(!Object.keys(a).length)delete plan.allocations[c];}return plan;}
 export function status(amount,budget){if(amount==null||budget==null)return {rate:null,remaining:null,tone:'none',color:'var(--j-sage)'};const rate=budget>0?amount/budget:null,remaining=budget-amount,tone=remaining<0||rate>=.9?'danger':rate>=.6?'care':rate>=.3?'steady':'calm';return {rate,remaining,tone,color:{danger:'var(--j-red)',care:'var(--j-orange)',steady:'var(--j-yellow)',calm:'var(--j-sage)'}[tone]};}
 export function cardsFor(data,slot){const byKey=new Map((data.cards??[]).map(c=>[c.card,c]));return CARDS.filter(c=>(!slot||c.owner===slot)&&(c.id!=='shinhan_line'||byKey.has(c.id))).map(c=>({...c,...(byKey.get(c.id)??{net:null,state:'not-paired'})}));}
-export function consumption(data,slot){const rows=cardsFor(data,slot),known=rows.filter(c=>c.net!==null&&c.net!==undefined),card=known.length?known.reduce((s,c)=>s+c.net,0):null,cash=slot?(data.ownCashNet??0):(data.cashNet??0);return {card,cash,net:slot?(card===null&&cash===0?null:(card??0)+cash):data.net,known:known.length,count:rows.length};}
+export const confirmedInstallment = row => Number.isSafeInteger(row.installmentNet) && row.installmentNet >= 0 ? row.installmentNet : null;
+const withInstallment = (net, installment) => net == null && !installment ? null : (net ?? 0) + (installment ?? 0);
+export const billedCardNet = row => withInstallment(row.net, confirmedInstallment(row));
+export function consumption(data,slot){
+ const rows=cardsFor(data,slot),known=rows.filter(c=>c.net!=null),amounts=rows.map(billedCardNet).filter(n=>n!=null);
+ const installments=rows.map(confirmedInstallment).filter(n=>n!=null);
+ const installment=installments.length?installments.reduce((sum,n)=>sum+n,0):null;
+ const card=amounts.length?amounts.reduce((sum,n)=>sum+n,0):null,cash=slot?(data.ownCashNet??0):(data.cashNet??0);
+ const net=slot?(card===null&&cash===0?null:(card??0)+cash):withInstallment(data.net,installment);
+ return {card,cash,net,installment,known:known.length,count:rows.length};
+}
 export const todayKst=(date=new Date())=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(date);
 export function validCash(value,slot,today=todayKst()){
  const amount=number(value.amount),date=value.date,category=value.category;

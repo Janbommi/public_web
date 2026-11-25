@@ -3,9 +3,14 @@ import {signInWithUsername} from '../account/username.mjs?v=web12';
 import {createSessionStorage,endDeviceSession,logoutMessage,SESSION_KEY} from '../account/session.mjs?v=web12';
 import {browserContext} from '../shared/page.mjs?v=web12';
 import {shiftMonth} from '../connect/months.mjs';
-import {CARDS,CATEGORIES,clone,number,won,totals,validatePlan,label,escape,todayKst,validCash,hasCardPlan,importPreviousPlan,planSaveRequest,classifiableRows,dashboardIdentity} from './dashboard-domain.mjs?v=web18';
-import * as views from './dashboard-views.mjs?v=web18';
+import {CARDS,CATEGORIES,clone,number,won,totals,validatePlan,label,escape,todayKst,validCash,hasCardPlan,importPreviousPlan,planSaveRequest,classifiableRows,dashboardIdentity} from './dashboard-domain.mjs?v=web19';
+import * as views from './dashboard-views.mjs?v=web19';
+import {mountStatementPage,statementCards} from './statement-page.mjs?v=web19';
+import {configureStatementEndpoint,getStatementStatus,uploadStatement,confirmStatementAmount} from './statement-api.mjs?v=web19';
 const BASE='https://xcchskngoactqsiiutsp.supabase.co',ENDPOINT=BASE+'/functions/v1/household-login';
+configureStatementEndpoint(ENDPOINT);
+let statementPage;
+function closeStatement(){statementPage?.dispose();statementPage=null;}
 const $=s=>document.querySelector(s),root=$('#dashboard'),main=$('#content');
 let persistenceUnavailable=false;
 const storage=createSessionStorage(()=>localStorage,()=>{persistenceUnavailable=true;$('#remember').checked=false;document.querySelectorAll('.storage-warning').forEach(e=>e.hidden=false);});
@@ -21,19 +26,34 @@ async function call(name,args={}){const r=await client.rpc(name,args);if(r.error
 function show(which){$('#login-panel').hidden=which!=='login';$('#restoring').hidden=which!=='restoring';root.hidden=which!=='app';}
 function note(text){$('#login-note').textContent=text;$('#login-note').hidden=!text;}
 function forgetPhotos(){photos.forEach(u=>URL.revokeObjectURL(u));photos=[];$('.j-photos').replaceChildren();}
-function reset(message=''){epoch++;request++;authenticated=false;forgetPhotos();Object.assign(s,{slot:null,canViewPartnerCards:false,cardScope:'mine',view:'home',data:null,plan:null,draft:null,dirty:false,busy:false,saving:false,cash:null,cashRequest:null,cashUncertain:false,notice:'',cashMessage:''});confirm=null;conflict=false;main.replaceChildren();$('.j-nav').replaceChildren();say('');note(message);show('login');}
+function reset(message=''){closeStatement();epoch++;request++;authenticated=false;forgetPhotos();Object.assign(s,{slot:null,canViewPartnerCards:false,cardScope:'mine',view:'home',data:null,plan:null,draft:null,dirty:false,busy:false,saving:false,cash:null,cashRequest:null,cashUncertain:false,notice:'',cashMessage:''});confirm=null;conflict=false;main.replaceChildren();$('.j-nav').replaceChildren();say('');note(message);show('login');}
 function classification(){const selected=classifiableRows(s.data,s.slot),cats=CATEGORIES.filter(c=>c.key!=='personal_'+(s.slot==='me'?'partner':'me'));return '<button class="j-back" data-go="manage">'+views.icon('left')+'관리</button><h1 class="j-title">내 카드 사용액 분류</h1><p class="j-subtitle">이미 쓴 금액을 목적별로 나눠요.<br>예산 계획은 바뀌지 않아요.</p>'+selected.map(a=>'<form class="classify-form j-plan-card" data-card="'+a.card+'"><h2>'+escape(CARDS.find(c=>c.id===a.card)?.name??a.card)+'</h2><p class="j-budget-note">수집 합계 '+won(a.net)+' 안에서 나눠요. 나머지는 미분류예요.</p>'+cats.map(c=>'<div class="j-allocation-row"><label>'+label(c,s.slot)+'</label>'+views.moneyInput('name="'+c.key+'"',a.amounts[c.key]??0,label(c,s.slot)+' 사용액')+'</div>').join('')+'<p class="j-error" role="alert"></p><button class="j-primary" type="submit">사용액 분류 저장</button></form>').join('');}
 function render(){
  if(!authenticated||!s.slot)return;
+ if(s.view!=='statement')closeStatement();
  const focusedScope=document.activeElement?.dataset?.cardScope;
  $('.j-nav').innerHTML=views.navigation(s);
  if(!s.data){main.innerHTML='<div class="j-month"><h1>우리 집 소비</h1></div><p class="j-subtitle">'+(s.busy?'불러오고 있어요.':s.error==='unregistered'?'아직 우리 집에 연결되지 않은 계정이에요.':'연결이 불안정해요. 다시 시도해 주세요.')+'</p>'+(!s.busy?'<button class="j-primary" data-reload>다시 시도</button>':'');return;}
+ if(s.view==='statement'){
+  const cards=statementCards(s);
+  if(cards.length){
+   if(!statementPage)statementPage=mountStatementPage(main,{
+    cards,month:s.month,getStatus:getStatementStatus,upload:uploadStatement,confirmAmount:confirmStatementAmount,
+    async getToken(){const e=epoch,{data,error}=await client.auth.getSession();if(e!==epoch||!data?.session)throw Object.assign(Error('session'),{status:error?.status??401});return data.session.access_token;},
+    onExpired:()=>reset('로그인이 끝났어요. 다시 로그인해 주세요.')
+   });
+   return;
+  }
+  closeStatement();s.view='home';
+ }
  const fn={home:views.home,budget:views.budget,settings:views.settings,cash:views.cash,'cash-confirm':views.cashConfirm,manage:views.manage,connections:views.connections,classification};
  main.innerHTML=(s.notice?'<p class="j-feedback" role="status">'+escape(s.notice)+'</p>':'')+(fn[s.view]??views.home)(s);
  if(s.view==='settings')updateDraft();
  if(focusedScope)document.querySelector('[data-card-scope="'+focusedScope+'"]')?.focus({preventScroll:true});
 }
 function navigate(view,{discard=false}={}){
+ const previousView=s.view;
+ if(view==='statement'&&(s.view!=='home'||!statementCards(s).length))return;
  if(s.saving)return;
  if(s.cashUncertain&&view!=='cash-confirm'){s.cashMessage='먼저 같은 기록의 저장 여부를 확인해 주세요.';render();return;}
  if(s.view==='settings'&&s.dirty&&!discard&&view!=='settings'){confirm={kind:'leave',view};updateDraft();$('[data-confirm-zone]').scrollIntoView({block:'nearest'});return;}
@@ -41,13 +61,14 @@ function navigate(view,{discard=false}={}){
  if(view==='settings'){s.draft=clone(s.plan);s.dirty=false;conflict=false;s.saveError='';}
  else{s.draft=null;s.dirty=false;confirm=null;}
  s.view=view;s.notice='';render();main.focus();window.scrollTo({top:0,behavior:'instant'});
+ if(previousView==='statement'&&view==='home')void load(s.month,{quiet:true});
 }
 async function load(month=s.month,{quiet=false}={}){
  if(!authenticated||!/^20\d{2}-(0[1-9]|1[0-2])$/.test(month)||month>todayKst().slice(0,7)||s.saving)return;
- if(quiet&&(s.busy||['settings','cash','cash-confirm','classification'].includes(s.view)))return;
+ if(quiet&&(s.busy||['settings','cash','cash-confirm','classification','statement'].includes(s.view)))return;
  const e=epoch,id=++request,startedView=s.view,same=s.month===month&&s.data;
  if(!same){s.month=month;s.data=null;s.plan=null;}s.busy=true;s.error=null;if(!quiet)render();
- try{const [data,plan,context]=await Promise.all([call('household_budget',{p_month:month}),call('household_budget_plan',{p_month:month}),call('household_context')]);if(e!==epoch||id!==request)return;const identity=dashboardIdentity(context);if(identity.slot!==s.slot)return reset('로그인 계정이 바뀌었어요. 다시 로그인해 주세요.');Object.assign(s,identity,{data,plan,busy:false,failed:false,updated:Date.now()});if(!s.canViewPartnerCards)s.cardScope='mine';if(startedView===s.view||!['settings','cash','cash-confirm','classification'].includes(s.view))render();}
+ try{const [data,plan,context]=await Promise.all([call('household_budget',{p_month:month}),call('household_budget_plan',{p_month:month}),call('household_context')]);if(e!==epoch||id!==request)return;const identity=dashboardIdentity(context);if(identity.slot!==s.slot)return reset('로그인 계정이 바뀌었어요. 다시 로그인해 주세요.');Object.assign(s,identity,{data,plan,busy:false,failed:false,updated:Date.now()});if(!s.canViewPartnerCards)s.cardScope='mine';if(startedView===s.view||!['settings','cash','cash-confirm','classification','statement'].includes(s.view))render();}
  catch(error){if(e!==epoch||id!==request)return;if(error.status===401)return reset('로그인이 끝났어요. 다시 로그인해 주세요.');s.canViewPartnerCards=false;s.cardScope='mine';s.busy=false;s.failed=true;s.error=error.code==='42501'?'unregistered':'network';render();}
 }
 function updateDraft(){
@@ -86,12 +107,13 @@ async function renewCollector(card){
  }finally{if(e===epoch){s.saving=false;s.renewing=null;render();}}
 }
 async function loadPhotos(){const e=epoch;try{const {data}=await client.auth.getSession();if(e!==epoch||!data?.session)return;for(const name of ['family-first.jpg','family-second.jpg']){const r=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+data.session.access_token},body:JSON.stringify({action:'photo',name}),cache:'no-store',credentials:'omit',redirect:'error',signal:AbortSignal.timeout(12000)});if(!r.ok)continue;const blob=await r.blob();if(e!==epoch)return;const url=URL.createObjectURL(blob);photos.push(url);const frame=document.createElement('div'),image=document.createElement('img');frame.className='j-photo';image.src=url;image.alt='우리 가족 사진';frame.append(image);$('.j-photos').append(frame);}}catch{/* Decorative photos never block finance. */}}
-async function enter(){const e=++epoch;authenticated=true;Object.assign(s,{slot:null,canViewPartnerCards:false,cardScope:'mine',data:null,plan:null});$('.j-nav').replaceChildren();show('app');main.innerHTML='<p class="j-subtitle">우리 집 정보를 불러오고 있어요.</p>';try{const context=await call('household_context');if(e!==epoch)return;Object.assign(s,dashboardIdentity(context));await recoverCash();await load();if(e===epoch)void loadPhotos();}catch(error){if(e!==epoch)return;if(error.status===401)return reset('로그인이 끝났어요. 다시 로그인해 주세요.');main.innerHTML='<p class="j-subtitle">연결을 확인하지 못했어요.</p><button class="j-primary" data-enter>다시 시도</button>';}}
+async function enter(){closeStatement();const e=++epoch;authenticated=true;Object.assign(s,{slot:null,canViewPartnerCards:false,cardScope:'mine',data:null,plan:null});$('.j-nav').replaceChildren();show('app');main.innerHTML='<p class="j-subtitle">우리 집 정보를 불러오고 있어요.</p>';try{const context=await call('household_context');if(e!==epoch)return;Object.assign(s,dashboardIdentity(context));await recoverCash();await load();if(e===epoch)void loadPhotos();}catch(error){if(e!==epoch)return;if(error.status===401)return reset('로그인이 끝났어요. 다시 로그인해 주세요.');main.innerHTML='<p class="j-subtitle">연결을 확인하지 못했어요.</p><button class="j-primary" data-enter>다시 시도</button>';}}
 function selectCards(scope){if(s.view!=='home'||!s.canViewPartnerCards||!['mine','partner'].includes(scope))return;s.cardScope=scope;render();document.querySelector('[data-card-scope="'+scope+'"]')?.focus({preventScroll:true});}
 root.addEventListener('keydown',event=>{const tab=event.target.closest('[data-card-scope]');if(!tab||!s.canViewPartnerCards)return;let next;if(event.key==='Home')next='mine';else if(event.key==='End')next='partner';else if(['ArrowLeft','ArrowRight'].includes(event.key))next=tab.dataset.cardScope==='mine'?'partner':'mine';if(next){event.preventDefault();selectCards(next);}});
 root.addEventListener('click',async event=>{const button=event.target.closest('button');if(!button)return;
  if(button.id==='logout'){reset('');const result=await endDeviceSession(client.auth,storage);note(logoutMessage(result));return;}
  if(button.hasAttribute('data-enter'))return enter();
+ if(button.hasAttribute('data-statement-open'))return navigate('statement');
  if(s.saving)return;
  if(button.dataset.cardScope){selectCards(button.dataset.cardScope);return;}
  if(button.dataset.go)return navigate(button.dataset.go);
@@ -119,8 +141,9 @@ client.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||event==
 addEventListener('storage',event=>{if(event.key===SESSION_KEY||event.key===null)if(authenticated)reset('다른 탭에서 로그인 상태가 바뀌었어요.');});
 addEventListener('pagehide',()=>{if(authenticated)reset('');});
 addEventListener('pageshow',event=>{if(event.persisted)location.reload();});
-setInterval(()=>{if(authenticated&&!document.hidden)load(s.month,{quiet:true});},30000);
-addEventListener('visibilitychange',()=>{if(!document.hidden&&authenticated)load(s.month,{quiet:true});});
+function refreshVisible(){if(authenticated&&!document.hidden){if(statementPage)statementPage.refreshPending();else void load(s.month,{quiet:true});}}
+setInterval(refreshVisible,30000);
+addEventListener('visibilitychange',refreshVisible);
 show('restoring');try{const {data,error}=await client.auth.getSession();if(data?.session)await enter();else if(error&&error.status!==401){show('login');note('접속 상태를 확인하지 못했어요. 잠시 뒤 새로고침해 주세요.');}else show('login');}catch{show('login');note('연결을 확인하지 못했어요. 잠시 뒤 새로고침해 주세요.');}
 
 
