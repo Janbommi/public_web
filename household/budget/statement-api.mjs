@@ -13,6 +13,7 @@ async function rpc(token, name, args, signal) {
   if (!endpoint || !token) throw failure(401);
   const url = new URL(endpoint);
   if (name === 'household_statement_upload') url.searchParams.set('statement', 'upload');
+  if (name === 'household_statement_inbox_upload') url.searchParams.set('statement', 'inbox');
   const response = await fetch(url, {
     method: 'POST', credentials: 'omit', cache: 'no-store', redirect: 'error', signal,
     headers: {'Content-Type':'application/json', Authorization:'Bearer ' + token},
@@ -118,3 +119,5 @@ export async function confirmStatementAmount({token, card, month, expectedVersio
   }, signal);
   return getStatementStatus({token, card, month, signal});
 }
+
+export {rpc as statementRequest};

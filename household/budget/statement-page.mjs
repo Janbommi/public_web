@@ -1,4 +1,4 @@
-import {cardsFor, escape, won} from './dashboard-domain.mjs?v=web21';
+import {cardsFor, escape, won} from './dashboard-domain.mjs?v=web22';
 
 const firstMonth = '2026-12';
 const monthPattern = /^20\d{2}-(?:0[1-9]|1[0-2])$/;
@@ -59,10 +59,9 @@ export function uploadOutcome(previous, result) {
     message:result.duplicate ? '이미 접수한 파일이에요. 같은 파일은 한 번만 처리해요.' : previous.testOnly ? '운영 테스트로 접수했어요. 예산에는 반영하지 않아요.' : '명세서를 접수했어요.'};
 }
 
-export function mountStatementPage(host, {cards, month, getToken, getStatus, upload, confirmAmount, onExpired}) {
+export function mountStatementPage(host, {cards, month, getToken, getStatus, upload, confirmAmount, onExpired, embedded = false}) {
   const initialMonth = monthPattern.test(month) && month >= firstMonth ? month : firstMonth;
-  host.innerHTML = `<button class="j-back" data-go="home" type="button">← 내 카드</button>
-    <h1 class="j-title">할부 명세서 올리기</h1>
+  host.innerHTML = `${embedded ? '' : '<button class="j-back" data-go="home" type="button">← 내 카드</button><h1 class="j-title">할부 명세서 올리기</h1>'}
     <p class="j-subtitle" data-statement-intro>이번 달에 낼 할부금이 있는 내 카드의 명세서를 올려 주세요.</p>
     <form class="j-form j-statement" id="statement-form">
       <label for="statement-mode">사용 방식<select id="statement-mode">

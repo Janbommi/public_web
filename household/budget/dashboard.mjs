@@ -5,8 +5,9 @@ import {browserContext} from '../shared/page.mjs?v=web12';
 import {shiftMonth} from '../connect/months.mjs';
 import {CARDS,CATEGORIES,clone,number,won,totals,validatePlan,label,escape,todayKst,validCash,hasCardPlan,importPreviousPlan,planSaveRequest,classifiableRows,dashboardIdentity} from './dashboard-domain.mjs?v=web19';
 import * as views from './dashboard-views.mjs?v=web19';
-import {mountStatementPage,statementCards} from './statement-page.mjs?v=web21';
-import {configureStatementEndpoint,getStatementStatus,uploadStatement,confirmStatementAmount} from './statement-api.mjs?v=web21';
+import {statementCards} from './statement-page.mjs?v=web22';
+import {mountAutoStatementPage} from './statement-auto-page.mjs?v=web22';
+import {configureStatementEndpoint,getStatementStatus,uploadStatement,confirmStatementAmount} from './statement-api.mjs?v=web22';
 const BASE='https://xcchskngoactqsiiutsp.supabase.co',ENDPOINT=BASE+'/functions/v1/household-login';
 configureStatementEndpoint(ENDPOINT);
 let statementPage;
@@ -44,7 +45,7 @@ function render(){
  if(s.view==='statement'){
   const cards=statementCards(s);
   if(cards.length){
-   if(!statementPage)statementPage=mountStatementPage(main,{
+   if(!statementPage)statementPage=mountAutoStatementPage(main,{
     cards,month:s.month,getStatus:getStatementStatus,upload:uploadStatement,confirmAmount:confirmStatementAmount,
     async getToken(){const e=epoch,{data,error}=await client.auth.getSession();if(e!==epoch||!data?.session)throw Object.assign(Error('session'),{status:error?.status??401});return data.session.access_token;},
     onExpired:()=>reset('로그인이 끝났어요. 다시 로그인해 주세요.')
