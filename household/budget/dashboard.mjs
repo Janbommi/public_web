@@ -6,7 +6,7 @@ import {shiftMonth} from '../connect/months.mjs';
 import {CARDS,CATEGORIES,clone,number,won,totals,validatePlan,label,escape,todayKst,validCash,hasCardPlan,importPreviousPlan,planSaveRequest,classifiableRows,dashboardIdentity} from './dashboard-domain.mjs?v=web19';
 import * as views from './dashboard-views.mjs?v=web19';
 import {statementCards} from './statement-page.mjs?v=web22';
-import {mountAutoStatementPage} from './statement-auto-page.mjs?v=web22';
+import {mountAutoStatementPage} from './statement-auto-page.mjs?v=web23';
 import {configureStatementEndpoint,getStatementStatus,uploadStatement,confirmStatementAmount} from './statement-api.mjs?v=web22';
 const BASE='https://xcchskngoactqsiiutsp.supabase.co',ENDPOINT=BASE+'/functions/v1/household-login';
 configureStatementEndpoint(ENDPOINT);

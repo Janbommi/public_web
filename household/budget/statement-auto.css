@@ -28,3 +28,9 @@
 #dashboard .j-inbox-confirm{padding:16px 0 0;border-top:1px solid var(--j-line);margin-top:14px}
 #dashboard .j-inbox-confirm .j-primary{width:100%}
 #dashboard .j-statement-inbox [hidden]{display:none}
+#dashboard .j-amount-disclosure{padding:0 16px;margin:0;border:1px solid var(--j-line);border-radius:16px;background:#fff}
+#dashboard .j-amount-disclosure>summary{font-size:15px;color:var(--j-green)}
+#dashboard .j-amount-entry{border:0;border-radius:0;padding:10px 0 18px;min-width:0}
+#dashboard .j-amount-scope{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#dashboard .j-amount-scope label{min-width:0}
+@media(max-width:420px){#dashboard .j-amount-scope{grid-template-columns:minmax(0,1fr)}}

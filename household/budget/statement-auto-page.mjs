@@ -1,7 +1,8 @@
 import {escape,won} from './dashboard-domain.mjs?v=web22';
 import {mountStatementPage,statementFileError,monthlyAmount} from './statement-page.mjs?v=web22';
-import {confirmStatementAmount} from './statement-api.mjs?v=web22';
+import {confirmStatementAmount,getStatementStatus} from './statement-api.mjs?v=web22';
 import {getStatementInbox,uploadStatementInbox} from './statement-auto-api.mjs?v=web22';
+import {mountAmountEntry} from './statement-amount-entry.mjs?v=web23';
 
 const reasons={
   protected_pdf:'암호가 걸린 PDF예요. 잠금을 해제한 파일로 다시 올려 주세요.',
@@ -78,6 +79,7 @@ export function mountAutoStatementPage(host,options) {
         <p>파일을 고르면 바로 접수해요. PDF, PNG, JPEG · 파일당 최대 5MiB</p>
         <p data-inbox-ready role="status">접수 준비를 확인하고 있어요.</p>
       </section>
+      <details class="j-inbox-manual j-amount-disclosure" data-amount-entry><summary>파일 없이 할부금 직접 입력</summary><div data-amount-host></div></details>
       <p class="j-inbox-note">2026년 12월부터 확인된 할부금을 예산에 반영해요. 11월까지의 과거 명세서는 운영 테스트로 처리하며 예산에 반영하지 않아요.</p>
       <div class="j-inbox-heading"><h2>파일별 접수 결과</h2><button type="button" data-inbox-refresh>상태 새로고침</button></div>
       <p class="j-error" data-inbox-error role="alert" hidden></p>
@@ -85,7 +87,7 @@ export function mountAutoStatementPage(host,options) {
       <ol class="j-inbox-list" data-inbox-list></ol>
       <p class="j-inbox-empty" data-inbox-empty>아직 접수한 명세서가 없어요.<br>명세서 파일을 고르면 여기에서 진행 상황을 볼 수 있어요.</p>
       <input type="file" data-inbox-retry-file accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" aria-label="같은 명세서 파일을 다시 선택" hidden>
-      <details class="j-inbox-manual" data-statement-manual-entry><summary>카드·납부월을 직접 지정하기</summary><div data-inbox-manual></div></details>
+      <details class="j-inbox-manual" data-statement-manual-entry><summary>카드·납부월을 지정해 파일 올리기</summary><div data-inbox-manual></div></details>
     </div>`;
   const chooser=host.querySelector('#statement-auto-files'),list=host.querySelector('[data-inbox-list]');
   const ready=host.querySelector('[data-inbox-ready]'),refresh=host.querySelector('[data-inbox-refresh]');
@@ -94,6 +96,14 @@ export function mountAutoStatementPage(host,options) {
   const entries=new Map(),local=[],names=new Map(),active=new Set();
   let closed=false,available=false,refreshing=false,request=0,mutation=0,sequence=0,retryTarget=null,manualPage=null;
   let confirmTarget=null,confirmItem=null,confirmDraft='',confirmChecked=false,confirmError='',confirmBusy=false;
+  let comparison=null;
+  const amountDetails=host.querySelector('[data-amount-entry]');
+  let amountPage=null;
+  amountDetails.addEventListener('toggle',()=>{
+    if(closed)return;
+    if(amountDetails.open&&!amountPage)amountPage=mountAmountEntry(host.querySelector('[data-amount-host]'),{...options,onSaved:()=>void load()});
+    if(!amountDetails.open&&amountPage){amountPage.dispose();amountPage=null;}
+  });
   let listController;
   const safe=()=>!closed&&host.isConnected;
   const expired=()=>{if(safe())options.onExpired();};
@@ -127,18 +137,51 @@ export function mountAutoStatementPage(host,options) {
           <p class="j-inbox-meta">${escape(receivedText(item))}</p>
           <p class="j-inbox-meta">${card?'<span>'+escape(card)+'</span>':''}${month?'<span>납부월 '+escape(month)+'</span>':''}${money?'<span>'+escape(money)+'</span>':''}${item.budgetApplied&&Number.isSafeInteger(item.confirmedAmount)?'<span>예산 반영액 '+won(item.confirmedAmount)+'</span>':''}</p>
           ${item.status==='needs_review'?'<p class="j-inbox-reason">'+escape(inboxReason(item.reason))+'</p>':''}
-          ${canConfirmInbox(item)?'<button class="j-edit" type="button" data-inbox-confirm-open="'+escape(item.id)+'">원본 보고 할부금 확인</button>':item.status==='needs_review'&&item.testOnly!==true?'<button class="j-edit" type="button" data-inbox-manual-open>카드·납부월을 직접 지정하기</button>':''}
+          ${canConfirmInbox(item)?'<button class="j-edit" type="button" data-inbox-confirm-open="'+escape(item.id)+'">원본 보고 할부금 확인</button>':item.status==='needs_review'&&item.testOnly!==true?'<button class="j-edit" type="button" data-inbox-manual-open>파일 없이 할부금 직접 입력</button>':''}
           ${item.status!=='pending'&&item.status!=='superseded'?'<button class="j-edit" type="button" data-inbox-retry="'+escape(item.id)+'">같은 파일로 다시 판독하기</button>':''}
           ${item.duplicate?'<p class="j-budget-note">이미 접수한 파일이에요. 기존 결과를 보여드려요.</p>':''}
           ${confirmTarget===item.id?`<form class="j-form j-statement j-inbox-confirm" data-inbox-confirm-form>
-            <label for="inbox-confirm-amount">이번 달에 추가로 반영할 할부 본인부담액(원)<input id="inbox-confirm-amount" type="text" inputmode="numeric" autocomplete="off" maxlength="17" value="${escape(confirmDraft)}"${confirmBusy?' disabled':''}></label>
-            <p class="j-budget-note">${escape(card)} · ${escape(month)}. 원본의 이번 회차 원금과 수수료에서 이미 보정·취소로 반영한 금액을 빼 주세요.</p>
-            <label class="j-statement-replace"><input id="inbox-confirm-check" type="checkbox"${confirmChecked?' checked':''}${confirmBusy?' disabled':''}>일시불·바우처와 이미 보정하거나 취소한 금액을 제외했어요.</label>
+            <label for="inbox-confirm-amount">이번 달 할부 본인부담 합계(원)<input id="inbox-confirm-amount" type="text" inputmode="numeric" autocomplete="off" maxlength="17" value="${escape(confirmDraft)}"${confirmBusy?' disabled':''}></label>
+            <p class="j-budget-note" data-inbox-comparison aria-live="polite"></p>
+            <p class="j-budget-note">${escape(card)} · ${escape(month)}. 원본에서 이번 회차의 할부 원금과 수수료를 확인하고, 이 카드의 전체 할부 합계를 입력해 주세요.</p>
+            <label class="j-statement-replace"><input id="inbox-confirm-check" type="checkbox"${confirmChecked?' checked':''}${confirmBusy?' disabled':''}>일시불·바우처·취소분과 다른 소비 항목에 이미 반영된 금액을 제외했어요.</label>
             <p class="j-error" data-inbox-confirm-error role="alert">${escape(confirmError)}</p>
-            <button class="j-primary" type="submit"${confirmBusy?' disabled':''}>${confirmBusy?'확인한 금액을 저장하고 있어요':'이 금액으로 예산 반영'}</button>
+            <button class="j-primary" type="submit"${confirmBusy||!comparison?.ready?' disabled':''}>${confirmBusy?'확인한 금액을 저장하고 있어요':'이 금액으로 예산 반영'}</button>
             <button class="j-edit" type="button" data-inbox-confirm-close${confirmBusy?' disabled':''}>닫기</button>
           </form>`:''}</li>`;
       }).join('');
+    updateComparison();
+  }
+  function updateComparison(){
+    const note=host.querySelector('[data-inbox-comparison]');
+    if(!note||!comparison)return;
+    const next=monthlyAmount(confirmDraft.trim());
+    note.textContent=comparison.error||(!comparison.ready?'현재 반영액을 확인하고 있어요.':
+      (comparison.amount===null?'아직 반영된 할부금이 없어요.':'현재 반영액 '+won(comparison.amount)+' ·')+
+      (next===null?' 이번 달 합계를 입력해 주세요.':' 확인 후 반영액 '+won(next)));
+    note.closest('form').querySelector('[type=submit]').disabled=confirmBusy||!comparison.ready;
+  }
+  async function compareAmount(item,request){
+    const controller=new AbortController();
+    active.add(controller);
+    try{
+      const token=await options.getToken();
+      if(!safe()||comparison!==request)return;
+      const state=await getStatementStatus({token,card:item.card,month:item.month,signal:controller.signal});
+      if(!safe()||comparison!==request)return;
+      if(state.version!==item.uploadId||state.revision!==item.revision)
+        throw Object.assign(Error('changed'),{status:409});
+      if(state.amount!==null&&(!Number.isSafeInteger(state.amount)||state.amount<0||state.amount>1e12))throw Error('amount');
+      request.amount=state.suspended?null:state.amount;
+      request.ready=true;
+    }catch(err){
+      if(!safe()||comparison!==request)return;
+      if(err.status===401){expired();return;}
+      request.error=err.status===409?'명세서가 바뀌었어요. 닫고 상태를 새로고침해 주세요.':'현재 반영액을 확인하지 못했어요. 닫고 다시 열어 주세요.';
+    }finally{
+      active.delete(controller);
+      if(safe()&&comparison===request){updateComparison();pump();}
+    }
   }
   async function load(){
     if(!safe()||refreshing||confirmTarget)return;
@@ -205,23 +248,25 @@ export function mountAutoStatementPage(host,options) {
       if(!available){warn('먼저 상태를 새로고침한 뒤 다시 시도해 주세요.');return;}
       retryTarget=button.dataset.inboxRetry;retryChooser.click();
     }else if(button.hasAttribute('data-inbox-manual-open')){
-      details.open=true;details.querySelector('summary').focus();details.scrollIntoView({block:'start',behavior:'smooth'});
+      amountDetails.open=true;amountDetails.querySelector('summary').focus();amountDetails.scrollIntoView({block:'start',behavior:'smooth'});
     }else if(button.hasAttribute('data-inbox-confirm-open')){
       const item=entries.get(button.dataset.inboxConfirmOpen);
       if(!item||!canConfirmInbox(item)||!lookupCard(item.card))return;
+      comparison={ready:false,amount:null};
       confirmTarget=item.id;confirmItem={...item};confirmDraft=item.readAmount===null?'':String(item.readAmount);confirmChecked=false;confirmError='';render();
+      void compareAmount(item,comparison);
       host.querySelector('#inbox-confirm-amount')?.focus();
     }else if(button.hasAttribute('data-inbox-confirm-close')){
-      if(confirmBusy)return;confirmTarget=null;confirmItem=null;confirmDraft='';confirmChecked=false;confirmError='';render();
+      if(confirmBusy)return;comparison=null;confirmTarget=null;confirmItem=null;confirmDraft='';confirmChecked=false;confirmError='';render();
     }
   });
-  list.addEventListener('input',event=>{if(event.target.id==='inbox-confirm-amount')confirmDraft=event.target.value;});
+  list.addEventListener('input',event=>{if(event.target.id==='inbox-confirm-amount'){confirmDraft=event.target.value;updateComparison();}});
   list.addEventListener('change',event=>{if(event.target.id==='inbox-confirm-check')confirmChecked=event.target.checked;});
   list.addEventListener('submit',event=>{
     if(!event.target.matches('[data-inbox-confirm-form]'))return;
     event.preventDefault();
     const item=confirmItem,value=monthlyAmount(confirmDraft.trim());
-    if(!item||!canConfirmInbox(item)||confirmBusy||!available)return;
+    if(!item||!canConfirmInbox(item)||confirmBusy||!comparison?.ready)return;
     if(value===null||!confirmChecked){confirmError=value===null?'0원 이상의 할부 합계를 입력해 주세요.':'원본과 제외할 금액을 확인하고 체크해 주세요.';render();host.querySelector(value===null?'#inbox-confirm-amount':'#inbox-confirm-check')?.focus();return;}
     confirmBusy=true;confirmError='';render();
     const controller=new AbortController();active.add(controller);
@@ -249,6 +294,6 @@ export function mountAutoStatementPage(host,options) {
   void load();
   return {
     refreshPending(){if(!closed){manualPage?.refreshPending();if(!active.size&&!confirmTarget)void load();}},
-    dispose(){closed=true;request++;listController?.abort();for(const controller of active)controller.abort();for(const job of local)job.file=null;local.length=0;entries.clear();names.clear();retryTarget=null;chooser.value='';retryChooser.value='';manualPage?.dispose();manualPage=null;}
+    dispose(){closed=true;request++;listController?.abort();for(const controller of active)controller.abort();for(const job of local)job.file=null;local.length=0;entries.clear();names.clear();retryTarget=null;chooser.value='';retryChooser.value='';manualPage?.dispose();manualPage=null;amountPage?.dispose();amountPage=null;}
   };
 }
