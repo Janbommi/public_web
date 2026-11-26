@@ -12,6 +12,13 @@ configureStatementEndpoint(ENDPOINT);
 let statementPage;
 function closeStatement(){statementPage?.dispose();statementPage=null;}
 const $=s=>document.querySelector(s),root=$('#dashboard'),main=$('#content');
+const splashIcon=$('#restoring img');
+function showSplashName(){
+ splashIcon.hidden=true;
+ $('#restoring span').classList.remove('sr-only');
+}
+splashIcon.addEventListener('error',showSplashName,{once:true});
+if(splashIcon.complete&&!splashIcon.naturalWidth)showSplashName();
 let persistenceUnavailable=false;
 const storage=createSessionStorage(()=>localStorage,()=>{persistenceUnavailable=true;$('#remember').checked=false;document.querySelectorAll('.storage-warning').forEach(e=>e.hidden=false);});
 const client=createClient(BASE,'',{auth:{storage,storageKey:SESSION_KEY}});
@@ -107,7 +114,30 @@ async function renewCollector(card){
  }finally{if(e===epoch){s.saving=false;s.renewing=null;render();}}
 }
 async function loadPhotos(){const e=epoch;try{const {data}=await client.auth.getSession();if(e!==epoch||!data?.session)return;for(const name of ['family-first.jpg','family-second.jpg']){const r=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+data.session.access_token},body:JSON.stringify({action:'photo',name}),cache:'no-store',credentials:'omit',redirect:'error',signal:AbortSignal.timeout(12000)});if(!r.ok)continue;const blob=await r.blob();if(e!==epoch)return;const url=URL.createObjectURL(blob);photos.push(url);const frame=document.createElement('div'),image=document.createElement('img');frame.className='j-photo';image.src=url;image.alt='우리 가족 사진';frame.append(image);$('.j-photos').append(frame);}}catch{/* Decorative photos never block finance. */}}
-async function enter(){closeStatement();const e=++epoch;authenticated=true;Object.assign(s,{slot:null,canViewPartnerCards:false,cardScope:'mine',data:null,plan:null});$('.j-nav').replaceChildren();show('app');main.innerHTML='<p class="j-subtitle">우리 집 정보를 불러오고 있어요.</p>';try{const context=await call('household_context');if(e!==epoch)return;Object.assign(s,dashboardIdentity(context));await recoverCash();await load();if(e===epoch)void loadPhotos();}catch(error){if(e!==epoch)return;if(error.status===401)return reset('로그인이 끝났어요. 다시 로그인해 주세요.');main.innerHTML='<p class="j-subtitle">연결을 확인하지 못했어요.</p><button class="j-primary" data-enter>다시 시도</button>';}}
+async function enter(){
+ closeStatement();
+ const e=++epoch;
+ authenticated=true;
+ Object.assign(s,{slot:null,canViewPartnerCards:false,cardScope:'mine',data:null,plan:null});
+ $('.j-nav').replaceChildren();
+ show('restoring');
+ try{
+  const context=await call('household_context');
+  if(e!==epoch)return;
+  Object.assign(s,dashboardIdentity(context));
+  await recoverCash();
+  if(e!==epoch)return;
+  await load();
+  if(e!==epoch)return;
+  show('app');
+  void loadPhotos();
+ }catch(error){
+  if(e!==epoch)return;
+  if(error.status===401)return reset('로그인이 끝났어요. 다시 로그인해 주세요.');
+  main.innerHTML='<p class="j-subtitle">연결을 확인하지 못했어요.</p><button class="j-primary" data-enter>다시 시도</button>';
+  show('app');
+ }
+}
 function selectCards(scope){if(s.view!=='home'||!s.canViewPartnerCards||!['mine','partner'].includes(scope))return;s.cardScope=scope;render();document.querySelector('[data-card-scope="'+scope+'"]')?.focus({preventScroll:true});}
 root.addEventListener('keydown',event=>{const tab=event.target.closest('[data-card-scope]');if(!tab||!s.canViewPartnerCards)return;let next;if(event.key==='Home')next='mine';else if(event.key==='End')next='partner';else if(['ArrowLeft','ArrowRight'].includes(event.key))next=tab.dataset.cardScope==='mine'?'partner':'mine';if(next){event.preventDefault();selectCards(next);}});
 root.addEventListener('click',async event=>{const button=event.target.closest('button');if(!button)return;
@@ -139,12 +169,26 @@ $('#copy-link').onclick=async()=>{try{await navigator.clipboard.writeText(locati
 $('#in-app').hidden=!browserContext().inApp;
 client.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||event==='TOKEN_REFRESHED'&&!session)if(authenticated)reset('로그인이 끝났어요. 다시 로그인해 주세요.');});
 addEventListener('storage',event=>{if(event.key===SESSION_KEY||event.key===null)if(authenticated)reset('다른 탭에서 로그인 상태가 바뀌었어요.');});
-addEventListener('pagehide',()=>{if(authenticated)reset('');});
+addEventListener('pagehide',()=>{reset('');});
 addEventListener('pageshow',event=>{if(event.persisted)location.reload();});
-function refreshVisible(){if(authenticated&&!document.hidden){if(statementPage)statementPage.refreshPending();else void load(s.month,{quiet:true});}}
+function refreshVisible(){if(authenticated&&!root.hidden&&!document.hidden){if(statementPage)statementPage.refreshPending();else void load(s.month,{quiet:true});}}
 setInterval(refreshVisible,30000);
 addEventListener('visibilitychange',refreshVisible);
-show('restoring');try{const {data,error}=await client.auth.getSession();if(data?.session)await enter();else if(error&&error.status!==401){show('login');note('접속 상태를 확인하지 못했어요. 잠시 뒤 새로고침해 주세요.');}else show('login');}catch{show('login');note('연결을 확인하지 못했어요. 잠시 뒤 새로고침해 주세요.');}
+async function restore(){
+ const e=epoch;
+ try{
+  const {data,error}=await client.auth.getSession();
+  if(e!==epoch)return;
+  if(data?.session)return enter();
+  show('login');
+  if(error&&error.status!==401)note('접속 상태를 확인하지 못했어요. 잠시 뒤 새로고침해 주세요.');
+ }catch{
+  if(e!==epoch)return;
+  show('login');
+  note('연결을 확인하지 못했어요. 잠시 뒤 새로고침해 주세요.');
+ }
+}
+await restore();
 
 
 
