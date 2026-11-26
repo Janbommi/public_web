@@ -1,8 +1,13 @@
-import {cardsFor, escape, won} from './dashboard-domain.mjs?v=web19';
+import {cardsFor, escape, won} from './dashboard-domain.mjs?v=web21';
 
 const firstMonth = '2026-12';
 const monthPattern = /^20\d{2}-(?:0[1-9]|1[0-2])$/;
 const types = {pdf:'application/pdf', png:'image/png', jpg:'image/jpeg', jpeg:'image/jpeg'};
+
+export function statementMonthKind(month) {
+  if (!monthPattern.test(month)) return null;
+  return month < firstMonth ? 'test' : 'live';
+}
 
 export function statementCards(state) {
   if (!['me', 'partner'].includes(state.slot) || state.cardScope === 'partner' || !state.data || state.failed) return [];
@@ -22,6 +27,13 @@ export function statementFileError(file) {
 
 export function receiptText(receipt) {
   if (!receipt) return '';
+  if (receipt.testOnly === true) {
+    const known = Number.isSafeInteger(receipt.readAmount) && receipt.readAmount >= 0;
+    if (receipt.status === 'pending') return '운영 테스트 접수 · 판독 중 · 예산 미반영';
+    if (receipt.status === 'confirmed') return '운영 테스트 판독 완료' + (known ? ' · 읽은 할부금 ' + won(receipt.readAmount) : '') + ' · 예산 미반영';
+    if (receipt.status === 'review') return (known ? '원본 확인이 필요한 후보 금액 ' + won(receipt.readAmount) : '자동으로 금액을 읽지 못했어요') + ' · 예산 미반영';
+    return '아직 접수된 테스트 명세서가 없어요 · 예산 미반영';
+  }
   const known = Number.isSafeInteger(receipt.amount) && receipt.amount >= 0;
   if (receipt.suspended === true) return '중복 반영 여부 확인 필요 · 현재 예산 반영 보류' + (known ? ' · 종전 확인액 ' + won(receipt.amount) : '');
   const confirmed = known ? '예산에 반영된 할부금 ' + won(receipt.amount) : '';
@@ -39,23 +51,28 @@ export function monthlyAmount(value) {
 
 export function uploadOutcome(previous, result) {
   if (!result?.version) throw Error('receipt');
+  if ((previous?.testOnly === true) !== (result.testOnly === true)) throw Error('scope');
   if (result.duplicate && (result.status === 'superseded' || (previous.version && result.version !== previous.version)))
     return {receipt:previous, message:'이전에 접수한 파일이에요. 최근 명세서를 유지했어요.'};
   if (!['pending','confirmed','review'].includes(result.status)) throw Error('receipt');
-  return {receipt:{...previous, version:result.version, status:result.status},
-    message:result.duplicate ? '이미 접수한 파일이에요. 같은 파일은 한 번만 처리해요.' : '명세서를 접수했어요.'};
+  return {receipt:{...previous, version:result.version, status:result.status, readAmount:result.readAmount ?? null, readAt:result.readAt ?? null},
+    message:result.duplicate ? '이미 접수한 파일이에요. 같은 파일은 한 번만 처리해요.' : previous.testOnly ? '운영 테스트로 접수했어요. 예산에는 반영하지 않아요.' : '명세서를 접수했어요.'};
 }
 
 export function mountStatementPage(host, {cards, month, getToken, getStatus, upload, confirmAmount, onExpired}) {
   const initialMonth = monthPattern.test(month) && month >= firstMonth ? month : firstMonth;
   host.innerHTML = `<button class="j-back" data-go="home" type="button">← 내 카드</button>
     <h1 class="j-title">할부 명세서 올리기</h1>
-    <p class="j-subtitle">이번 달에 낼 할부금이 있는 내 카드의 명세서를 올려 주세요.</p>
+    <p class="j-subtitle" data-statement-intro>이번 달에 낼 할부금이 있는 내 카드의 명세서를 올려 주세요.</p>
     <form class="j-form j-statement" id="statement-form">
+      <label for="statement-mode">사용 방식<select id="statement-mode">
+        <option value="live">할부금 예산 반영</option>
+        <option value="test">운영 테스트 · 예산 미반영</option>
+      </select><small data-statement-mode-note>2026년 12월부터 확인된 할부금을 납부월 예산에 반영해요.</small></label>
       <label for="statement-card">내 카드<select id="statement-card">${cards.map(c =>
         '<option value="' + escape(c.id) + '">' + escape(c.name) + '</option>').join('')}</select></label>
       <label for="statement-month">납부월<input type="month" id="statement-month" min="${firstMonth}" max="2099-12" value="${initialMonth}" required>
-        <small>카드대금이 빠져나가는 달을 선택해 주세요.</small></label>
+        <small data-statement-month-note>카드대금이 빠져나가는 달을 선택해 주세요.</small></label>
       <section class="j-statement-state" aria-label="명세서 처리 상태">
         <p role="status" data-statement-state></p><button type="button" data-statement-refresh>상태 새로고침</button>
       </section>
@@ -70,6 +87,7 @@ export function mountStatementPage(host, {cards, month, getToken, getStatus, upl
       <div id="statement-manual-fields" class="j-manual-fields" hidden></div>
     </section>`;
   const form = host.querySelector('#statement-form');
+  const mode = form.querySelector('#statement-mode');
   const card = form.querySelector('#statement-card'), payMonth = form.querySelector('#statement-month');
   const chooser = form.querySelector('#statement-file'), replace = form.querySelector('#statement-replace');
   const statusText = form.querySelector('[data-statement-state]'), refresh = form.querySelector('[data-statement-refresh]');
@@ -78,7 +96,9 @@ export function mountStatementPage(host, {cards, month, getToken, getStatus, upl
   const review = host.querySelector('[data-review-zone]'), manual = review.querySelector('[data-statement-manual]');
   const fields = review.querySelector('#statement-manual-fields');
   let request, receipt = null, receiptScope = '', fresh = false, file = null, loading = false, sending = false, closed = false;
-  const selected = () => cards.some(c => c.id === card.value) && monthPattern.test(payMonth.value) && payMonth.value >= firstMonth;
+  const testOnly = () => mode.value === 'test';
+  const selected = () => cards.some(c => c.id === card.value) && statementMonthKind(payMonth.value) === mode.value;
+  const rememberedMonths = {live:initialMonth, test:'2026-11'};
   const current = action => !closed && request === action && !action.signal.aborted;
   function begin() {
     request?.abort();
@@ -89,37 +109,38 @@ export function mountStatementPage(host, {cards, month, getToken, getStatus, upl
   function clearFile() { file = null; chooser.value = ''; replace.checked = false; }
   function closeManual() { fields.replaceChildren(); fields.hidden = true; manual.setAttribute('aria-expanded','false'); }
   function update() {
-    const mayUpload = selected() && fresh && receipt?.available === true && !loading && !sending;
+    const mayUpload = selected() && fresh && (receipt?.testOnly === true) === testOnly() && receipt?.available === true && !loading && !sending;
     const replacing = Boolean(file && receipt?.version);
     replace.parentElement.hidden = !replacing;
     chooser.disabled = !mayUpload;
     replace.disabled = !mayUpload;
     submit.disabled = !mayUpload || !file || (replacing && !replace.checked);
-    submit.textContent = sending ? '보내는 중…' : replacing ? '새 명세서 보내기' : '명세서 보내기';
+    submit.textContent = sending ? '보내는 중…' : testOnly() ? '테스트 명세서 보내기' : replacing ? '새 명세서 보내기' : '명세서 보내기';
     form.querySelector('[data-file-label]').textContent = file ? '파일 선택됨 · 다시 선택' : '파일 선택';
     refresh.disabled = !selected() || loading || sending;
     statusText.textContent = loading ? '접수 상태를 확인하고 있어요.' : receiptText(receipt) || '접수 상태 확인 전';
     if (receipt?.available === false) statusText.textContent += ' · 업로드 준비 중';
-    review.hidden = receipt?.status !== 'review' || !receipt.version || !Number.isSafeInteger(receipt.revision);
+    review.hidden = testOnly() || receipt?.testOnly === true || receipt?.status !== 'review' || !receipt.version || !Number.isSafeInteger(receipt.revision);
     if (review.hidden) closeManual();
     manual.disabled = sending || !fresh;
     for (const control of fields.querySelectorAll('input,button')) control.disabled = sending || !fresh;
   }
   async function loadStatus({keepMessage = false, keepFile = false} = {}) {
     const action = begin(), target = {card:card.value, month:payMonth.value};
-    const scope = target.card + '/' + target.month;
+    const scope = mode.value + '/' + target.card + '/' + target.month;
     if (scope !== receiptScope) receipt = null;
     receiptScope = scope;
     if (!keepFile) clearFile();
     if (!keepMessage) message.textContent = '';
     fresh = false; sending = false; loading = selected(); warn(); closeManual(); update();
-    if (!loading) { warn('2026년 12월 이후의 납부월과 내 카드를 선택해 주세요.'); return; }
+    if (!loading) { warn(testOnly() ? '운영 테스트는 2000년 1월부터 2026년 11월까지의 납부월을 선택해 주세요.' : '2026년 12월 이후의 납부월과 내 카드를 선택해 주세요.'); return; }
     try {
       const token = await getToken();
       if (!current(action)) return;
       const result = await getStatus({...target, token, signal:action.signal});
       if (!current(action)) return;
       if (!['empty','pending','confirmed','review'].includes(result?.status)) throw Error('status');
+      if ((result.testOnly === true) !== testOnly()) throw Error('scope');
       receipt = result; fresh = true;
     } catch (err) {
       if (!current(action)) return;
@@ -130,7 +151,7 @@ export function mountStatementPage(host, {cards, month, getToken, getStatus, upl
     } finally { if (current(action)) { loading = false; update(); } }
   }
   manual.addEventListener('click', () => {
-    if (review.hidden || sending) return;
+    if (review.hidden || sending || testOnly()) return;
     if (!fields.hidden) { closeManual(); return; }
     clearFile(); update();
     fields.innerHTML = `<label for="statement-amount">이번 달에 추가로 반영할 할부 본인부담액(원)
@@ -206,7 +227,22 @@ export function mountStatementPage(host, {cards, month, getToken, getStatus, upl
     } finally { if (current(action)) { sending = false; update(); } }
   }
   card.addEventListener('change', () => loadStatus());
-  payMonth.addEventListener('change', () => loadStatus());
+  payMonth.addEventListener('change', () => { if (selected()) rememberedMonths[mode.value] = payMonth.value; void loadStatus(); });
+  mode.addEventListener('change', () => {
+    payMonth.min = testOnly() ? '2000-01' : firstMonth;
+    payMonth.max = testOnly() ? '2026-11' : '2099-12';
+    payMonth.value = rememberedMonths[mode.value];
+    host.querySelector('[data-statement-intro]').textContent = testOnly()
+      ? '과거 명세서로 접수와 판독을 확인해요. 테스트 결과는 예산에 반영하지 않아요.'
+      : '이번 달에 낼 할부금이 있는 내 카드의 명세서를 올려 주세요.';
+    form.querySelector('[data-statement-mode-note]').textContent = testOnly()
+      ? '운영 테스트 · 예산 미반영. 테스트 결과를 실제 예산으로 바꾸거나 금액을 직접 입력할 수 없어요.'
+      : '2026년 12월부터 확인된 할부금을 납부월 예산에 반영해요.';
+    form.querySelector('[data-statement-month-note]').textContent = testOnly()
+      ? '명세서에 적힌 실제 납부월을 선택해 주세요. 2026년 11월까지 테스트할 수 있어요.'
+      : '카드대금이 빠져나가는 달을 선택해 주세요.';
+    void loadStatus();
+  });
   refresh.addEventListener('click', () => loadStatus());
   chooser.addEventListener('change', () => {
     const picked = chooser.files?.[0];
