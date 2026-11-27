@@ -1,10 +1,11 @@
+import {familyIconController} from './family-icon.mjs?v=web28';
 import {createClient} from '../account/client.mjs?v=web12';
 import {signInWithUsername} from '../account/username.mjs?v=web12';
 import {createSessionStorage,endDeviceSession,logoutMessage,SESSION_KEY} from '../account/session.mjs?v=web12';
 import {browserContext} from '../shared/page.mjs?v=web12';
 import {shiftMonth} from '../connect/months.mjs';
 import {CARDS,CATEGORIES,clone,number,won,totals,validatePlan,label,escape,todayKst,validCash,hasCardPlan,importPreviousPlan,planSaveRequest,classifiableRows,dashboardIdentity} from './dashboard-domain.mjs?v=web19';
-import * as views from './spending-control.mjs?v=web27';
+import * as views from './spending-control.mjs?v=web28';
 import {installSpendingCheck} from './spending-check.mjs?v=web24';
 import {statementCards} from './statement-page.mjs?v=web22';
 import {mountAutoStatementPage} from './statement-auto-page.mjs?v=web23';
@@ -26,6 +27,7 @@ const storage=createSessionStorage(()=>localStorage,()=>{persistenceUnavailable=
 const client=createClient(BASE,'',{auth:{storage,storageKey:SESSION_KEY}});
 const s={slot:null,canViewPartnerCards:false,cardScope:'mine',month:todayKst().slice(0,7),view:'home',data:null,plan:null,busy:false,saving:false,draft:null,dirty:false,notice:'',cash:null,cashRequest:null,cashUncertain:false};
 let epoch=0,request=0,photos=[],authenticated=false,loginAttempt=0,confirm=null,conflict=false;
+const familyIcon=familyIconController(ENDPOINT,async()=>{const {data}=await client.auth.getSession();return data?.session?.access_token;});
 let followCurrentMonth=true;
 const spendingCheck=installSpendingCheck(main,{getState:()=>s,call:async(...args)=>{try{return await call(...args);}catch(error){if(error.status===401)reset('로그인이 끝났어요. 다시 로그인해 주세요.');throw error;}},reload:()=>load(s.month)});
 views.installCardReview(root);
@@ -38,7 +40,7 @@ async function call(name,args={}){const r=await client.rpc(name,args);if(r.error
 function show(which){$('#login-panel').hidden=which!=='login';$('#restoring').hidden=which!=='restoring';root.hidden=which!=='app';}
 function note(text){$('#login-note').textContent=text;$('#login-note').hidden=!text;}
 function forgetPhotos(){photos.forEach(u=>URL.revokeObjectURL(u));photos=[];$('.j-photos').replaceChildren();}
-function reset(message=''){spendingCheck.reset();closeStatement();epoch++;request++;authenticated=false;forgetPhotos();Object.assign(s,{slot:null,canViewPartnerCards:false,cardScope:'mine',view:'home',data:null,plan:null,draft:null,dirty:false,busy:false,saving:false,cash:null,cashRequest:null,cashUncertain:false,notice:'',cashMessage:''});confirm=null;conflict=false;main.replaceChildren();$('.j-nav').replaceChildren();say('');note(message);show('login');}
+function reset(message=''){familyIcon.reset();spendingCheck.reset();closeStatement();epoch++;request++;authenticated=false;forgetPhotos();Object.assign(s,{slot:null,canViewPartnerCards:false,cardScope:'mine',view:'home',data:null,plan:null,draft:null,dirty:false,busy:false,saving:false,cash:null,cashRequest:null,cashUncertain:false,notice:'',cashMessage:''});confirm=null;conflict=false;main.replaceChildren();$('.j-nav').replaceChildren();say('');note(message);show('login');}
 function classification(){const selected=classifiableRows(s.data,s.slot),cats=CATEGORIES.filter(c=>c.key!=='personal_'+(s.slot==='me'?'partner':'me'));return '<button class="j-back" data-go="manage">'+views.icon('left')+'관리</button><h1 class="j-title">내 카드 사용액 분류</h1><p class="j-subtitle">이미 쓴 금액을 목적별로 나눠요.<br>예산 계획은 바뀌지 않아요.</p>'+selected.map(a=>'<form class="classify-form j-plan-card" data-card="'+a.card+'"><h2>'+escape(CARDS.find(c=>c.id===a.card)?.name??a.card)+'</h2><p class="j-budget-note">수집 합계 '+won(a.net)+' 안에서 나눠요. 나머지는 미분류예요.</p>'+cats.map(c=>'<div class="j-allocation-row"><label>'+label(c,s.slot)+'</label>'+views.moneyInput('name="'+c.key+'"',a.amounts[c.key]??0,label(c,s.slot)+' 사용액')+'</div>').join('')+'<p class="j-error" role="alert"></p><button class="j-primary" type="submit">사용액 분류 저장</button></form>').join('');}
 function render(){
  if(!authenticated||!s.slot)return;
@@ -62,6 +64,7 @@ function render(){
  const restoreDetails=views.restoreCardDetailsAfterRender(main,s);
  main.innerHTML=(s.notice?'<p class="j-feedback" role="status">'+escape(s.notice)+'</p>':'')+(fn[s.view]??views.home)(s);
  restoreDetails();
+ if(s.view==='manage'&&familyIcon.android)main.querySelector('#logout')?.before(familyIcon.settings());
  if(s.view==='settings')updateDraft();
  if(focusedScope)document.querySelector('[data-card-scope="'+focusedScope+'"]')?.focus({preventScroll:true});
 }
@@ -125,6 +128,7 @@ async function renewCollector(card){
 }
 async function loadPhotos(){const e=epoch;try{const {data}=await client.auth.getSession();if(e!==epoch||!data?.session)return;for(const name of ['family-first.jpg','family-second.jpg']){const r=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+data.session.access_token},body:JSON.stringify({action:'photo',name}),cache:'no-store',credentials:'omit',redirect:'error',signal:AbortSignal.timeout(12000)});if(!r.ok)continue;const blob=await r.blob();if(e!==epoch)return;const url=URL.createObjectURL(blob);photos.push(url);const frame=document.createElement('div'),image=document.createElement('img');frame.className='j-photo';image.src=url;image.alt='우리 가족 사진';frame.append(image);$('.j-photos').append(frame);}}catch{/* Decorative photos never block finance. */}}
 async function enter(){
+ familyIcon.reset();
  closeStatement();
  const e=++epoch;
  authenticated=true;
@@ -135,6 +139,7 @@ async function enter(){
   const context=await call('household_context');
   if(e!==epoch)return;
   Object.assign(s,dashboardIdentity(context));
+  familyIcon.signedIn(context);
   await recoverCash();
   if(e!==epoch)return;
   await load();

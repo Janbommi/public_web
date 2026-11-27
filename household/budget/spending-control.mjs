@@ -256,7 +256,7 @@ export function navigation(state) {
 }
 
 export function manage(state) {
-  return original.manage(state).replace('째미즈 web19', '째미즈 web27');
+  return original.manage(state).replace('째미즈 web19', '째미즈 web28');
 }
 
 export function installCardReview(root) {
