@@ -473,6 +473,41 @@
 #dashboard .spend-home-top { display: grid; gap: 20px; margin: 0 0 20px; }
 #dashboard .spend-home-top > .spend-watch { margin: 0; }
 
+#dashboard .spend-hero .spend-track { display:flex; }
+#dashboard .spend-hero .spend-hold-track { background:#edc791; }
+#dashboard .spend-hero:is(.is-unknown,.is-unset,.is-mismatch) .spend-track { display:none; }
+#dashboard .spend-equation {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px 24px;
+  margin:13px 0 0;
+}
+#dashboard .spend-equation dt { color:var(--spend-muted); font-size:12px; }
+#dashboard .spend-equation dd { margin:3px 0 0; font-size:15px; font-weight:650; }
+#dashboard .spend-equation .spend-hold-field dt { color:#f1d49c; }
+#dashboard .spend-telecom {
+  margin:15px 0;
+  padding:14px 16px;
+  background:#f5f2e9;
+  border-radius:12px;
+}
+#dashboard .spend-telecom h3 { margin:0 0 10px; color:var(--j-ink); font-size:14px; }
+#dashboard .spend-telecom dl { margin:0; gap:8px; }
+#dashboard .spend-telecom dt { color:var(--j-ink); }
+#dashboard .spend-telecom dt small { display:block; color:var(--j-sub); font-size:11px; }
+#dashboard .spend-telecom dd { font-size:14px; }
+#dashboard .spend-telecom p { margin:10px 0 0; font-size:12px; line-height:1.6; }
+#dashboard .spend-budget-line { padding:14px 16px; color:var(--j-ink); }
+#dashboard .spend-budget-line + .spend-budget-line { border-top:1px solid var(--spend-rule); }
+#dashboard .spend-budget-line > div { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:3px 14px; }
+#dashboard .spend-budget-line strong { font-size:15px; }
+#dashboard .spend-budget-line b { color:var(--j-green); font-size:14px; }
+#dashboard .spend-budget-line.is-over b { color:var(--spend-danger); }
+#dashboard .spend-budget-line:is(.is-unknown,.is-mismatch,.is-unset) b { color:var(--j-sub); font-size:12px; }
+#dashboard .spend-budget-line dl { display:flex; flex-wrap:wrap; gap:3px 14px; margin:6px 0 0; color:var(--j-sub); font-size:12px; line-height:1.6; }
+#dashboard .spend-budget-line dl > div { display:flex; gap:4px; }
+#dashboard .spend-budget-line dd { margin:0; }
+
 #dashboard .spend-plan {
   min-width: 0;
   margin: 0 0 21px;
