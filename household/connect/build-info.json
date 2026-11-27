@@ -1,9 +1,9 @@
 {
   "appName": "째미즈 asset",
-  "version": "1.02",
-  "versionCode": 17,
-  "sha256": "a26144caef4eb0f7e0b2c407d6df4b9a2f23caa9b6c985bfa996e944cab855f5",
-  "bytes": 295703,
+  "version": "1.03",
+  "versionCode": 18,
+  "sha256": "ca98b3c64ca9b0d362d2a8e93eaf2d71e8f7d95b5470caf704ab09fe5ebca3d6",
+  "bytes": 299800,
   "signed": true,
   "distribution": "public",
   "containsPrivateFamilyPhotos": false,
@@ -17,6 +17,6 @@
     36
   ],
   "independentQa": "pass",
-  "upgrade": "1.0 (15) to 1.02 (17)",
+  "upgrade": "1.02 (17) to 1.03 (18)",
   "testEnvironment": "Android emulators with synthetic fixtures"
 }
