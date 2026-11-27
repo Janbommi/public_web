@@ -134,19 +134,23 @@
 #dashboard .spend-meter {
   --meter-green: #4e765f;
   --meter-yellow: #ac7915;
+  --meter-orange: #bc5a1d;
   --meter-red: #a3372a;
   --meter-rail: #e9e6da;
   display: grid;
-  grid-template-columns: minmax(0,1fr) auto;
+  grid-template-columns: minmax(0,1fr) 7ch;
+  font-size: 11px;
   align-items: center;
   gap: 8px;
 }
 #dashboard .meter-green { --meter-fill: var(--meter-green); }
 #dashboard .meter-yellow { --meter-fill: var(--meter-yellow); }
+#dashboard .meter-orange { --meter-fill: var(--meter-orange); }
 #dashboard .meter-red { --meter-fill: var(--meter-red); }
 #dashboard .spend-hero .spend-meter {
   --meter-green: #b1d4b0;
   --meter-yellow: #f2c657;
+  --meter-orange: #feb277;
   --meter-red: #ffa698;
   --meter-rail: #ffffff28;
   display: block;
@@ -172,6 +176,8 @@
   color: var(--j-sub);
   font-size: 11px;
   font-weight: 500;
+  text-align: right;
+  overflow-wrap: anywhere;
   line-height: 1.45;
 }
 #dashboard .spend-hero .spend-track { height: 10px; }
@@ -417,13 +423,6 @@
   font-weight: 750;
   line-height: 1.45;
   overflow-wrap: anywhere;
-}
-#dashboard .spend-card-status :is(strong, b, small, span) { display: block; }
-#dashboard .spend-card-status small {
-  margin-top: 3px;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--j-sub);
 }
 #dashboard .spend-card:is(.is-over, [data-tone="danger"]) { border-color: #e8c3b8; }
 #dashboard .spend-card:is(.is-over, [data-tone="danger"]) .spend-card-status { color: var(--spend-danger); }
