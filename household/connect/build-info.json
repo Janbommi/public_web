@@ -1,20 +1,22 @@
 {
   "appName": "째미즈 asset",
-  "version": "1.0",
-  "versionCode": 15,
-  "sha256": "b057a426d4481ddee479f0c072e9b2a72d64502bf934d6062d7fe64006b9bc92",
-  "bytes": 275224,
+  "version": "1.02",
+  "versionCode": 17,
+  "sha256": "a26144caef4eb0f7e0b2c407d6df4b9a2f23caa9b6c985bfa996e944cab855f5",
+  "bytes": 295703,
+  "signed": true,
   "distribution": "public",
   "containsPrivateFamilyPhotos": false,
-  "network": "fixed authenticated enrollment, invitation approval and monthly collection; no merchant or notification body; no new individual purchase rows",
-  "diagnostics": "encrypted local queue; local latest 32 content-free callbacks for 7 days; bounded retries",
-  "deviceTested": false,
+  "network": "fixed authenticated enrollment, invitation approval and monthly collection; no merchant or notification body",
+  "diagnostics": "encrypted local queue; Hana latest 32 content-free callbacks for 7 days; NH encrypted 31-day/1024-delivery journal and local ACK daily totals; bounded retries",
+  "deviceTested": true,
+  "physicalDeviceTested": false,
   "androidRuntimeTested": true,
   "runtimeApis": [
     31,
     36
   ],
-  "testEnvironment": "Emulators with synthetic data; physical OEM power-management behavior not certified",
-  "upgrade": "Same package/signature; four encrypted keys and exact queued synthetic events preserved from 0.95",
-  "independentQa": "pass"
+  "independentQa": "pass",
+  "upgrade": "1.0 (15) to 1.02 (17)",
+  "testEnvironment": "Android emulators with synthetic fixtures"
 }
