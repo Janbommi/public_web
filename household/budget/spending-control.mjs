@@ -47,6 +47,30 @@ function budgetState(used, budget) {
   return {kind:'remaining', label:'남은 예산', amount:left, priority:6};
 }
 
+const percentFormat = new Intl.NumberFormat('ko-KR', {maximumFractionDigits:2});
+
+function usageMeter(used, budget, reserved = 0) {
+  if (!(budget > 0) || used == null || used < 0) return '';
+  const committed = (used + reserved) * 100;
+  const tone = committed > 88 * budget ? 'red' : committed >= 70 * budget ? 'yellow' : 'green';
+  const percent = committed / budget;
+  let label = percentFormat.format(percent) + '%';
+  // Keep rounded captions on the same side of each boundary as the actual amount.
+  for (const boundary of [70, 88, 100]) {
+    if (label === boundary + '%' && committed !== boundary * budget) {
+      label += committed > boundary * budget ? ' 초과' : ' 미만';
+      break;
+    }
+  }
+  const spentWidth = Math.min(100, used * 100 / budget);
+  const holdWidth = Math.min(100, percent) - spentWidth;
+  const basis = reserved > 0 ? '예정 포함' : '사용';
+  return '<span class="spend-meter meter-'+tone+'"><span class="spend-track" aria-hidden="true">'+
+    '<i style="width:'+spentWidth+'%"></i>'+
+    (holdWidth > 0 ? '<i class="spend-hold-track" style="width:'+holdWidth+'%"></i>' : '')+
+    '</span><small class="spend-meter-caption">예산 대비 '+label+' '+basis+'</small></span>';
+}
+
 function hero(state, rows) {
   const unplanned = rows.filter(card => card.budget == null).length;
   const unknown = rows.filter(card => card.net == null || card.used == null || card.used < 0).length;
@@ -75,14 +99,11 @@ function hero(state, rows) {
   if (status.kind === 'exhausted') notice.push('카드 예산을 모두 사용했어요.');
   const usedLabel = unknown ? '확인된 사용액' : '현재 사용액';
   const planLabel = unplanned ? '설정된 예산' : '카드 예산';
-  const rate = available && budget > 0 ? Math.round(Math.min(used/budget,1)*1000)/10 : null;
-  const holdRate = rate == null ? 0 : Math.min(100-rate,Math.round(reserved/budget*1000)/10);
   return '<section class="spend-hero is-'+status.kind+'" aria-labelledby="my-spending-title">'+
     '<h1 class="spend-eyebrow" id="my-spending-title">'+label+'</h1>'+
     (period?'<p class="spend-period">'+period.label+'</p>':'')+
     '<div class="spend-amount">'+(available ? won(status.amount) : '확인 필요')+'</div>'+
-    (rate == null ? '' : '<div class="spend-track" aria-hidden="true"><i style="width:'+rate+'%"></i>'+
-      (holdRate ? '<i class="spend-hold-track" style="width:'+holdRate+'%"></i>':'')+'</div>')+
+    (available ? usageMeter(used,budget,reserved) : '')+
     '<dl class="spend-equation"><div><dt>'+planLabel+'</dt><dd>'+(rows.some(r=>r.budget!=null) ? won(budget) : '미설정')+'</dd></div>'+
     '<div><dt>'+usedLabel+'</dt><dd>'+textAmount(rows.some(r=>r.used!=null) ? used : null)+'</dd></div>'+
     (telecom ? '<div class="spend-hold-field"><dt>KT 납부 예정</dt><dd>'+textAmount(telecom.reserved)+'</dd></div>':'')+'</dl>'+
@@ -126,20 +147,29 @@ function details(state) {
     '<div><span>우리 집 소비 · 반영 기준</span><strong>'+textAmount(household)+'</strong><small>현금 포함 · 카드 집계 '+all.known+'/'+all.count+'장</small></div></section>';
 }
 
-function cardDetail(card, dashboardState) {
-  const state = cardState(card), due = confirmedInstallment(card);
-  const warning = state.kind === 'over' || state.kind === 'exhausted';
+function cardMeter(card, state) {
+  return state.amount == null ? '' : usageMeter(card.used,card.budget,card.telecom?.reserved);
+}
+
+function cardSummary(card, state) {
   let summary = state.amount == null ? state.label : won(state.amount)+(state.kind==='over'?' 초과':' 남음');
   if (state.kind === 'zero') summary = '사용 계획 없음';
   if (state.kind === 'exhausted') summary = '예산 소진 · 0원';
+  return '<span class="spend-card-label"><strong>'+escape(card.name)+'</strong><small>'+escape(card.purpose)+'</small></span>'+
+    '<span class="spend-card-status">'+summary+'<small>'+(card.telecom?.reserved>0?'KT 예정 반영':'반영 기준')+'</small></span>'+
+    cardMeter(card,state);
+}
+
+function cardDetail(card, dashboardState) {
+  const state = cardState(card), due = confirmedInstallment(card);
+  const warning = state.kind === 'over' || state.kind === 'exhausted';
   const lines = [['카드 예산',card.budget==null?'미설정':won(card.budget)],
     [card.id==='samsung_happiness'?'본인 부담 사용액':'현재 사용액',textAmount(card.used)]];
   if (card.telecom) lines.push(['아직 사용액에 포함되지 않은 KT 예정액',textAmount(card.telecom.reserved)]);
   if (due!=null) lines.push(['사용액에 포함된 반영 할부',won(due)]);
   if (card.id==='samsung_happiness') lines.push(['별도 바우처 사용',textAmount(card.voucherNet)]);
   return '<details class="spend-card is-'+state.kind+'" id="spend-card-'+card.id+'" data-card="'+card.id+'">'+
-    '<summary><span class="spend-card-label"><strong>'+escape(card.name)+'</strong><small>'+escape(card.purpose)+'</small></span>'+
-    '<span class="spend-card-status">'+summary+'<small>'+(card.telecom?.reserved>0?'KT 예정 반영':'반영 기준')+'</small></span></summary>'+
+    '<summary>'+cardSummary(card,state)+'</summary>'+
     '<div class="spend-card-body" data-spend-card="'+card.id+'"><dl>'+lines.map(([key,value])=>'<div><dt>'+key+'</dt><dd>'+value+'</dd></div>').join('')+'</dl>'+
     (card.unavailableReason?'<p class="j-budget-note">'+card.unavailableReason+' · 저장된 수집액만 표시해요.</p>':'')+
     (card.net==null?'<p class="j-budget-note">일시불 사용액 확인 전</p>':'')+(card.installmentPending?'<p class="j-budget-note">명세서 확인 중인 할부는 별도로 확인해 주세요.</p>':'')+
@@ -169,7 +199,17 @@ export function home(state) {
 // Refresh only the summary so that stale amounts are marked without losing input.
 export function refreshSpendingSummary(main, state) {
   const top = main.querySelector('.spend-home-top');
-  if (top) { const mine = ownRows(state,state.slot); top.innerHTML = hero(state,mine)+watch(mine); }
+  if (top) {
+    const mine = ownRows(state,state.slot);
+    top.innerHTML = hero(state,mine)+watch(mine);
+    for (const card of mine) {
+      const details = main.querySelector('#spend-card-'+card.id);
+      if (!details) continue;
+      const balance = cardState(card);
+      details.className = 'spend-card is-'+balance.kind;
+      details.querySelector('summary').innerHTML = cardSummary(card,balance);
+    }
+  }
   const status = main.querySelector('.j-status-row');
   if (status) status.outerHTML = refreshRow(state);
 }
@@ -194,7 +234,7 @@ export function budget(state) {
       return '<div class="spend-budget-line is-'+balance.kind+'" data-budget-card="'+row.id+'"><div><strong>'+escape(row.name)+
         '</strong><b>'+result+'</b></div><dl><div><dt>예산</dt><dd>'+(budget==null?'미설정':won(budget))+'</dd></div>'+
         '<div><dt>현재 사용</dt><dd>'+textAmount(row.used)+'</dd></div>'+
-        (row.telecom?'<div><dt>KT 납부 예정</dt><dd>'+textAmount(row.telecom.reserved)+'</dd></div>':'')+'</dl></div>';
+        (row.telecom?'<div><dt>KT 납부 예정</dt><dd>'+textAmount(row.telecom.reserved)+'</dd></div>':'')+'</dl>'+cardMeter(row,balance)+'</div>';
     }).join('')+'</div>';
   });
   return monthBar(state)+refreshRow(state)+'<section class="spend-plan"><div class="j-budget-head"><h1>'+monthName(state)+
@@ -213,7 +253,7 @@ export function navigation(state) {
 }
 
 export function manage(state) {
-  return original.manage(state).replace('째미즈 web19', '째미즈 web25');
+  return original.manage(state).replace('째미즈 web19', '째미즈 web26');
 }
 
 export function installCardReview(root) {

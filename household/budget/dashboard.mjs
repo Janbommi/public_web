@@ -4,7 +4,7 @@ import {createSessionStorage,endDeviceSession,logoutMessage,SESSION_KEY} from '.
 import {browserContext} from '../shared/page.mjs?v=web12';
 import {shiftMonth} from '../connect/months.mjs';
 import {CARDS,CATEGORIES,clone,number,won,totals,validatePlan,label,escape,todayKst,validCash,hasCardPlan,importPreviousPlan,planSaveRequest,classifiableRows,dashboardIdentity} from './dashboard-domain.mjs?v=web19';
-import * as views from './spending-control.mjs?v=web25';
+import * as views from './spending-control.mjs?v=web26';
 import {installSpendingCheck} from './spending-check.mjs?v=web24';
 import {statementCards} from './statement-page.mjs?v=web22';
 import {mountAutoStatementPage} from './statement-auto-page.mjs?v=web23';
