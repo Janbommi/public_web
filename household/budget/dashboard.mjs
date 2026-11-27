@@ -4,7 +4,8 @@ import {createSessionStorage,endDeviceSession,logoutMessage,SESSION_KEY} from '.
 import {browserContext} from '../shared/page.mjs?v=web12';
 import {shiftMonth} from '../connect/months.mjs';
 import {CARDS,CATEGORIES,clone,number,won,totals,validatePlan,label,escape,todayKst,validCash,hasCardPlan,importPreviousPlan,planSaveRequest,classifiableRows,dashboardIdentity} from './dashboard-domain.mjs?v=web19';
-import * as views from './dashboard-views.mjs?v=web19';
+import * as views from './spending-control.mjs?v=web24';
+import {installSpendingCheck} from './spending-check.mjs?v=web24';
 import {statementCards} from './statement-page.mjs?v=web22';
 import {mountAutoStatementPage} from './statement-auto-page.mjs?v=web23';
 import {configureStatementEndpoint,getStatementStatus,uploadStatement,confirmStatementAmount} from './statement-api.mjs?v=web22';
@@ -25,6 +26,9 @@ const storage=createSessionStorage(()=>localStorage,()=>{persistenceUnavailable=
 const client=createClient(BASE,'',{auth:{storage,storageKey:SESSION_KEY}});
 const s={slot:null,canViewPartnerCards:false,cardScope:'mine',month:todayKst().slice(0,7),view:'home',data:null,plan:null,busy:false,saving:false,draft:null,dirty:false,notice:'',cash:null,cashRequest:null,cashUncertain:false};
 let epoch=0,request=0,photos=[],authenticated=false,loginAttempt=0,confirm=null,conflict=false;
+let followCurrentMonth=true;
+const spendingCheck=installSpendingCheck(main,{getState:()=>s,call:async(...args)=>{try{return await call(...args);}catch(error){if(error.status===401)reset('로그인이 끝났어요. 다시 로그인해 주세요.');throw error;}},reload:()=>load(s.month)});
+views.installCardReview(root);
 const pendingKey=()=> 'jjaemiz-cash-pending-'+s.slot;
 function pendingId(){try{const id=sessionStorage.getItem(pendingKey());return /^[0-9a-f-]{36}$/.test(id??'')?id:null;}catch{return null;}}
 function rememberPending(id){try{if(id)sessionStorage.setItem(pendingKey(),id);else sessionStorage.removeItem(pendingKey());}catch{if(id)s.pendingStorageWarning=true;}}
@@ -34,7 +38,7 @@ async function call(name,args={}){const r=await client.rpc(name,args);if(r.error
 function show(which){$('#login-panel').hidden=which!=='login';$('#restoring').hidden=which!=='restoring';root.hidden=which!=='app';}
 function note(text){$('#login-note').textContent=text;$('#login-note').hidden=!text;}
 function forgetPhotos(){photos.forEach(u=>URL.revokeObjectURL(u));photos=[];$('.j-photos').replaceChildren();}
-function reset(message=''){closeStatement();epoch++;request++;authenticated=false;forgetPhotos();Object.assign(s,{slot:null,canViewPartnerCards:false,cardScope:'mine',view:'home',data:null,plan:null,draft:null,dirty:false,busy:false,saving:false,cash:null,cashRequest:null,cashUncertain:false,notice:'',cashMessage:''});confirm=null;conflict=false;main.replaceChildren();$('.j-nav').replaceChildren();say('');note(message);show('login');}
+function reset(message=''){spendingCheck.reset();closeStatement();epoch++;request++;authenticated=false;forgetPhotos();Object.assign(s,{slot:null,canViewPartnerCards:false,cardScope:'mine',view:'home',data:null,plan:null,draft:null,dirty:false,busy:false,saving:false,cash:null,cashRequest:null,cashUncertain:false,notice:'',cashMessage:''});confirm=null;conflict=false;main.replaceChildren();$('.j-nav').replaceChildren();say('');note(message);show('login');}
 function classification(){const selected=classifiableRows(s.data,s.slot),cats=CATEGORIES.filter(c=>c.key!=='personal_'+(s.slot==='me'?'partner':'me'));return '<button class="j-back" data-go="manage">'+views.icon('left')+'관리</button><h1 class="j-title">내 카드 사용액 분류</h1><p class="j-subtitle">이미 쓴 금액을 목적별로 나눠요.<br>예산 계획은 바뀌지 않아요.</p>'+selected.map(a=>'<form class="classify-form j-plan-card" data-card="'+a.card+'"><h2>'+escape(CARDS.find(c=>c.id===a.card)?.name??a.card)+'</h2><p class="j-budget-note">수집 합계 '+won(a.net)+' 안에서 나눠요. 나머지는 미분류예요.</p>'+cats.map(c=>'<div class="j-allocation-row"><label>'+label(c,s.slot)+'</label>'+views.moneyInput('name="'+c.key+'"',a.amounts[c.key]??0,label(c,s.slot)+' 사용액')+'</div>').join('')+'<p class="j-error" role="alert"></p><button class="j-primary" type="submit">사용액 분류 저장</button></form>').join('');}
 function render(){
  if(!authenticated||!s.slot)return;
@@ -55,29 +59,34 @@ function render(){
   closeStatement();s.view='home';
  }
  const fn={home:views.home,budget:views.budget,settings:views.settings,cash:views.cash,'cash-confirm':views.cashConfirm,manage:views.manage,connections:views.connections,classification};
+ const restoreDetails=views.restoreCardDetailsAfterRender(main,s);
  main.innerHTML=(s.notice?'<p class="j-feedback" role="status">'+escape(s.notice)+'</p>':'')+(fn[s.view]??views.home)(s);
+ restoreDetails();
  if(s.view==='settings')updateDraft();
  if(focusedScope)document.querySelector('[data-card-scope="'+focusedScope+'"]')?.focus({preventScroll:true});
 }
 function navigate(view,{discard=false}={}){
+ if(view==='assets')view='home';
  const previousView=s.view;
  if(view==='statement'&&(s.view!=='home'||!statementCards(s).length))return;
  if(s.saving)return;
  if(s.cashUncertain&&view!=='cash-confirm'){s.cashMessage='먼저 같은 기록의 저장 여부를 확인해 주세요.';render();return;}
  if(s.view==='settings'&&s.dirty&&!discard&&view!=='settings'){confirm={kind:'leave',view};updateDraft();$('[data-confirm-zone]').scrollIntoView({block:'nearest'});return;}
- if(view==='assets'){location.href='../account/';return;}
+ if(view!==s.view)spendingCheck.reset();
  if(view==='settings'){s.draft=clone(s.plan);s.dirty=false;conflict=false;s.saveError='';}
  else{s.draft=null;s.dirty=false;confirm=null;}
- s.view=view;s.notice='';render();main.focus();window.scrollTo({top:0,behavior:'instant'});
+ s.view=view;s.notice='';render();main.focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});
  if(previousView==='statement'&&view==='home')void load(s.month,{quiet:true});
 }
-async function load(month=s.month,{quiet=false}={}){
+async function load(month=s.month,{quiet=false,chooseMonth=false}={}){
  if(!authenticated||!/^20\d{2}-(0[1-9]|1[0-2])$/.test(month)||month>todayKst().slice(0,7)||s.saving)return;
- if(quiet&&(s.busy||['settings','cash','cash-confirm','classification','statement'].includes(s.view)))return;
+ if(chooseMonth)followCurrentMonth=month===todayKst().slice(0,7);
+ if(quiet&&(s.busy||spendingCheck.editing()||['settings','cash','cash-confirm','classification','statement'].includes(s.view)))return;
+ if(!quiet)spendingCheck.reset();
  const e=epoch,id=++request,startedView=s.view,same=s.month===month&&s.data;
  if(!same){s.month=month;s.data=null;s.plan=null;}s.busy=true;s.error=null;if(!quiet)render();
- try{const [data,plan,context]=await Promise.all([call('household_budget',{p_month:month}),call('household_budget_plan',{p_month:month}),call('household_context')]);if(e!==epoch||id!==request)return;const identity=dashboardIdentity(context);if(identity.slot!==s.slot)return reset('로그인 계정이 바뀌었어요. 다시 로그인해 주세요.');Object.assign(s,identity,{data,plan,busy:false,failed:false,updated:Date.now()});if(!s.canViewPartnerCards)s.cardScope='mine';if(startedView===s.view||!['settings','cash','cash-confirm','classification','statement'].includes(s.view))render();}
- catch(error){if(e!==epoch||id!==request)return;if(error.status===401)return reset('로그인이 끝났어요. 다시 로그인해 주세요.');s.canViewPartnerCards=false;s.cardScope='mine';s.busy=false;s.failed=true;s.error=error.code==='42501'?'unregistered':'network';render();}
+ try{const [data,plan,context]=await Promise.all([call('household_budget',{p_month:month}),call('household_budget_plan',{p_month:month}),call('household_context')]);if(e!==epoch||id!==request)return;const identity=dashboardIdentity(context);if(identity.slot!==s.slot)return reset('로그인 계정이 바뀌었어요. 다시 로그인해 주세요.');Object.assign(s,identity,{data,plan,busy:false,failed:false,updated:Date.now()});if(!s.canViewPartnerCards)s.cardScope='mine';if(spendingCheck.editing())views.refreshSpendingSummary(main,s);else if(startedView===s.view||!['settings','cash','cash-confirm','classification','statement'].includes(s.view))render();}
+ catch(error){if(e!==epoch||id!==request)return;if(error.status===401)return reset('로그인이 끝났어요. 다시 로그인해 주세요.');s.canViewPartnerCards=false;s.cardScope='mine';s.busy=false;s.failed=true;s.error=error.code==='42501'?'unregistered':'network';if(spendingCheck.editing())views.refreshSpendingSummary(main,s);else render();}
 }
 function updateDraft(){
  if(!s.draft||s.view!=='settings')return;
@@ -139,7 +148,7 @@ async function enter(){
   show('app');
  }
 }
-function selectCards(scope){if(s.view!=='home'||!s.canViewPartnerCards||!['mine','partner'].includes(scope))return;s.cardScope=scope;render();document.querySelector('[data-card-scope="'+scope+'"]')?.focus({preventScroll:true});}
+function selectCards(scope){if(s.view!=='home'||!s.canViewPartnerCards||!['mine','partner'].includes(scope))return;spendingCheck.reset();s.cardScope=scope;render();document.querySelector('[data-card-scope="'+scope+'"]')?.focus({preventScroll:true});}
 root.addEventListener('keydown',event=>{const tab=event.target.closest('[data-card-scope]');if(!tab||!s.canViewPartnerCards)return;let next;if(event.key==='Home')next='mine';else if(event.key==='End')next='partner';else if(['ArrowLeft','ArrowRight'].includes(event.key))next=tab.dataset.cardScope==='mine'?'partner':'mine';if(next){event.preventDefault();selectCards(next);}});
 root.addEventListener('click',async event=>{const button=event.target.closest('button');if(!button)return;
  if(button.id==='logout'){reset('');const result=await endDeviceSession(client.auth,storage);note(logoutMessage(result));return;}
@@ -148,7 +157,7 @@ root.addEventListener('click',async event=>{const button=event.target.closest('b
  if(s.saving)return;
  if(button.dataset.cardScope){selectCards(button.dataset.cardScope);return;}
  if(button.dataset.go)return navigate(button.dataset.go);
- if(button.dataset.month)return load(shiftMonth(s.month,Number(button.dataset.month)));
+ if(button.dataset.month)return load(shiftMonth(s.month,Number(button.dataset.month)),{chooseMonth:true});
  if(button.hasAttribute('data-reload'))return load();
  if(button.hasAttribute('data-import')){if(s.dirty){confirm={kind:'import'};updateDraft();}else await importPlan();return;}
  if(button.hasAttribute('data-keep')){confirm=null;updateDraft();return;}
@@ -159,10 +168,10 @@ root.addEventListener('click',async event=>{const button=event.target.closest('b
  if(button.hasAttribute('data-save-cash'))await saveCash();
 });
 root.addEventListener('click',event=>{const link=event.target.closest('a');if(!link)return;if(link.matches('.j-brand')||link.getAttribute('href')==='../account/'){event.preventDefault();navigate(link.matches('.j-brand')?'home':'assets');}});
-root.addEventListener('change',event=>{if(event.target.id==='month')load(event.target.value);});
+root.addEventListener('change',event=>{if(event.target.id==='month')load(event.target.value,{chooseMonth:true});});
 root.addEventListener('input',event=>{const el=event.target;if(s.view==='settings'&&s.draft){if(el.dataset.directBudget)s.draft[el.dataset.directBudget][el.dataset.budgetKey]=el.value;else if(el.dataset.planAmount)s.draft.budgets[el.dataset.planAmount]=el.value;else if(el.dataset.allocCategory)s.draft.allocations[el.dataset.allocCategory][el.dataset.pay]=el.value;else return;s.dirty=true;s.saveError='';confirm=null;updateDraft();}});
 root.addEventListener('focusout',event=>{const el=event.target;if(el.matches('input[inputmode="numeric"]')){const n=number(el.value);if(n!==null&&Number.isFinite(n))el.value=new Intl.NumberFormat('ko-KR').format(n);}});
-root.addEventListener('submit',async event=>{event.preventDefault();const form=event.target;if(form.id==='plan-form')return savePlan();if(form.id==='cash-form'){const values=Object.fromEntries(new FormData(form)),message=validCash(values,s.slot);if(message){$('#cash-error').textContent=message;return;}s.cash=values;s.cashRequest=pendingId()??crypto.randomUUID();s.cashUncertain=false;s.cashMessage='';s.view='cash-confirm';render();main.focus();window.scrollTo({top:0,behavior:'instant'});return;}
+root.addEventListener('submit',async event=>{event.preventDefault();const form=event.target;if(form.id==='plan-form')return savePlan();if(form.id==='cash-form'){const values=Object.fromEntries(new FormData(form)),message=validCash(values,s.slot);if(message){$('#cash-error').textContent=message;return;}s.cash=values;s.cashRequest=pendingId()??crypto.randomUUID();s.cashUncertain=false;s.cashMessage='';s.view='cash-confirm';render();main.focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});return;}
  if(form.matches('.classify-form')){if(s.saving)return;const a=s.data.ownAllocations.find(a=>a.card===form.dataset.card),amounts=Object.fromEntries([...form.querySelectorAll('input')].map(i=>[i.name,number(i.value)??0])),total=Object.values(amounts).reduce((a,b)=>a+b,0);if(Object.values(amounts).some(n=>!Number.isSafeInteger(n))||total>a.net){form.querySelector('.j-error').textContent='분류 합계가 수집액을 넘지 않도록 확인해 주세요.';return;}const e=epoch;s.saving=true;form.querySelector('button').disabled=true;try{await call(a.card==='hana'?'household_classify_hana':'household_classify_card',{p_month:s.month,p_expected_version:a.version,p_expected_count:a.eventCount,p_expected_net:a.net,p_amounts:amounts,...(a.card==='hana'?{}:{p_card:a.card})});if(e!==epoch)return;s.notice='사용액 분류를 저장했어요.';s.saving=false;await load();}catch(error){if(e!==epoch)return;if(error.status===401)return reset('로그인이 끝났어요. 다시 로그인해 주세요.');form.querySelector('.j-error').textContent=error.code==='40001'?'수집액이나 분류가 바뀌었어요. 아래에서 최신 사용액을 불러와 주세요.':'저장을 확인하지 못했어요. 최신 사용액을 불러와 확인해 주세요.';const retry=document.createElement('button');retry.type='button';retry.dataset.reload='';retry.textContent='최신 사용액 불러오기';form.querySelector('.j-error').append(retry);}finally{if(e===epoch){s.saving=false;form.querySelector('button').disabled=false;}}}
 });
 $('#login-form').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget,attempt=++loginAttempt,button=form.querySelector('button');button.disabled=true;button.textContent='로그인 중…';$('#login-error').textContent='';note('');try{storage.choose(form.elements.remember.checked);const {data,error}=await signInWithUsername(client.auth,ENDPOINT,form.elements.username.value.trim(),form.elements.password.value);if(attempt!==loginAttempt)return;if(error&&(error.status===undefined||error.status===0||error.status>=500))throw Error('network');if(error||!data?.session){form.elements.password.value='';$('#login-error').textContent=error?.status===429?'시도가 많아요. 잠시 뒤 다시 시도해 주세요.':'아이디나 비밀번호를 확인해 주세요.';return;}form.reset();if(persistenceUnavailable)$('#remember').checked=false;await enter();}catch{$('#login-error').textContent='연결이 불안정해요. 잠시 뒤 다시 시도해 주세요.';form.elements.password.value='';}finally{button.disabled=false;button.textContent='로그인';}});
@@ -172,7 +181,14 @@ client.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||event==
 addEventListener('storage',event=>{if(event.key===SESSION_KEY||event.key===null)if(authenticated)reset('다른 탭에서 로그인 상태가 바뀌었어요.');});
 addEventListener('pagehide',()=>{reset('');});
 addEventListener('pageshow',event=>{if(event.persisted)location.reload();});
-function refreshVisible(){if(authenticated&&!root.hidden&&!document.hidden){if(statementPage)statementPage.refreshPending();else void load(s.month,{quiet:true});}}
+function refreshVisible(){
+ if(!authenticated||root.hidden||document.hidden)return;
+ const currentMonth=todayKst().slice(0,7);
+ if(s.view==='home'&&followCurrentMonth&&s.month!==currentMonth&&!s.saving&&!s.busy&&!s.dirty&&!spendingCheck.editing()){
+  void load(currentMonth);return;
+ }
+ if(statementPage)statementPage.refreshPending();else void load(s.month,{quiet:true});
+}
 setInterval(refreshVisible,30000);
 addEventListener('visibilitychange',refreshVisible);
 async function restore(){
